@@ -918,21 +918,40 @@ const findOptimalRoute = async () => {
             The end coordinate is approximately ${endLoc.lat}, ${endLoc.lng}.
             The user's preferences are: Prefer Highways: ${routePreferences.preferHighways}, Avoid Tolls: ${routePreferences.avoidTolls}, Prefer Scenic Route: ${routePreferences.preferScenic}.
             Here is the available road data in GeoJSON format: ${JSON.stringify(allRoadsData)}.
-            Based on this data and the preferences, determine the best route and respond with the name of the road(s) to take, in order. For example: "Prithvi Highway, Local Road".
+            Based on this data and the preferences, determine the best route and return the road names in the required JSON format.
         `;
 
         const result: GenerateContentResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: prompt
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        route: {
+                            type: Type.ARRAY,
+                            description: "An array of road names, in order, that form the optimal route.",
+                            items: {
+                                type: Type.STRING,
+                            }
+                        }
+                    },
+                    required: ["route"]
+                }
+            }
         });
 
-        const routeText = result.text.trim();
-        const roadNames = routeText.split(',').map(name => name.trim());
+        const jsonResponse = JSON.parse(result.text);
+        const roadNames = jsonResponse.route;
+        
+        if (!roadNames || roadNames.length === 0) {
+            throw new Error(translate('error_no_route'));
+        }
         
         let routeCoordinates: any[] = [];
         let pathFound = false;
 
-        // Naive pathfinding: connect endpoints of road segments
         const roadFeatures = allRoadsData.features.filter((f: any) => roadNames.includes(f.properties.name));
         
         if (roadFeatures.length === 0) {
