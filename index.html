@@ -42,6 +42,51 @@
                     </div>
                 </div>
                 <div id="gps-status-indicator" data-lang-key-title="gps_searching" title="GPS Status: Searching..."></div>
+                
+                <!-- New Language Selector -->
+                <div id="language-selector-container">
+                    <button id="language-selector-btn" class="icon-button" aria-label="Select Language">
+                        <span class="material-icons">language</span>
+                    </button>
+                    <div id="language-popup" class="hidden">
+                        <div class="lang-category">
+                            <h3 data-lang-key="lang_cat_international">International</h3>
+                            <button class="lang-option" data-lang="en">English</button>
+                            <button class="lang-option" data-lang="es">Español</button>
+                            <button class="lang-option" data-lang="fr">Français</button>
+                            <button class="lang-option" data-lang="de">Deutsch</button>
+                            <button class="lang-option" data-lang="pt">Português</button>
+                            <button class="lang-option" data-lang="it">Italiano</button>
+                            <button class="lang-option" data-lang="nl">Nederlands</button>
+                            <button class="lang-option" data-lang="ru">Русский</button>
+                            <button class="lang-option" data-lang="ar">العربية</button>
+                            <button class="lang-option" data-lang="zh">中文</button>
+                            <button class="lang-option" data-lang="ja">日本語</button>
+                            <button class="lang-option" data-lang="ko">한국어</button>
+                            <button class="lang-option" data-lang="hi">हिन्दी</button>
+                            <button class="lang-option" data-lang="id">Bahasa Indonesia</button>
+                            <button class="lang-option" data-lang="tr">Türkçe</button>
+                            <button class="lang-option" data-lang="vi">Tiếng Việt</button>
+                            <button class="lang-option" data-lang="th">ภาษาไทย</button>
+                        </div>
+                        <hr>
+                        <div class="lang-category">
+                            <h3 data-lang-key="lang_cat_nepali">Nepali</h3>
+                            <button class="lang-option" data-lang="np">नेपाली</button>
+                            <button class="lang-option" data-lang="mai">मैथिली</button>
+                            <button class="lang-option" data-lang="bho">भोजपुरी</button>
+                            <button class="lang-option" data-lang="thr">थारु</button>
+                            <button class="lang-option" data-lang="taj">तामाङ</button>
+                            <button class="lang-option" data-lang="new">नेपाल भाषा</button>
+                            <button class="lang-option" data-lang="mag">मगर</button>
+                            <button class="lang-option" data-lang="rai">राई</button>
+                            <button class="lang-option" data-lang="lif">लिम्बु</button>
+                            <button class="lang-option" data-lang="gvr">गुरुङ</button>
+                            <button class="lang-option" data-lang="xsr">शेर्पा</button>
+                        </div>
+                    </div>
+                </div>
+
                 <button id="profile-btn" class="icon-button" data-lang-key-aria-label="profile" aria-label="Profile">
                     <span class="material-icons">person</span>
                 </button>
@@ -80,14 +125,6 @@
             <hr>
             <div class="settings-section">
                 <h3 data-lang-key="app_settings">App Settings</h3>
-                 <div class="setting-item">
-                    <label for="language-select" data-lang-key="language">Language</label>
-                    <select id="language-select" aria-label="Select language">
-                        <option value="en">English</option>
-                        <option value="np">नेपाली</option>
-                        <option value="hi">हिन्दी</option>
-                    </select>
-                </div>
                 <div class="setting-item">
                     <span data-lang-key="dark_mode">Dark Mode</span>
                     <button id="theme-toggle" class="icon-button" data-lang-key-aria-label="toggle_dark_mode" aria-label="Toggle dark mode">
