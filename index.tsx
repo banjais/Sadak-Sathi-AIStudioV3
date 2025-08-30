@@ -620,6 +620,16 @@ async function fetchAndDisplayData() {
         
         updateDisplayedItems(); // Initial display with all items
 
+        // Populate route finder datalist
+        const datalist = document.getElementById('locations-datalist') as HTMLDataListElement;
+        datalist.innerHTML = ''; // Clear previous options
+        const allLocations = [...allPois, ...allIncidents];
+        allLocations.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.name;
+            datalist.appendChild(option);
+        });
+
         // Setup filters
         const filtersContainer = document.getElementById('display-panel-filters')!;
         filtersContainer.innerHTML = `
@@ -1238,6 +1248,15 @@ function setupEventListeners() {
     findRouteBtn.addEventListener('click', () => handleFindRoute());
     clearRouteBtn.addEventListener('click', clearRoute);
     
+    // Route Finder - Swap Locations
+    document.getElementById('swap-locations-btn')!.addEventListener('click', () => {
+        const fromInput = document.getElementById('from-input') as HTMLInputElement;
+        const toInput = document.getElementById('to-input') as HTMLInputElement;
+        const temp = fromInput.value;
+        fromInput.value = toInput.value;
+        toInput.value = temp;
+    });
+
     // App Mode
     appModeBtn.addEventListener('click', () => appModeModal.classList.remove('hidden'));
     appModeModal.addEventListener('click', (e) => {

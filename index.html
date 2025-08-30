@@ -238,12 +238,18 @@
                 <div class="route-inputs">
                     <div class="input-group">
                         <label for="from-input" data-lang-key="from">From</label>
-                        <input type="text" id="from-input" data-lang-key-placeholder="from_placeholder" placeholder="Start location" value="Maitighar Mandala">
+                        <input type="text" id="from-input" list="locations-datalist" data-lang-key-placeholder="from_placeholder" placeholder="Start location" value="Maitighar Mandala">
+                    </div>
+                     <div class="swap-locations-container">
+                        <button id="swap-locations-btn" class="icon-button" aria-label="Swap locations">
+                            <span class="material-icons">swap_vert</span>
+                        </button>
                     </div>
                     <div class="input-group">
                         <label for="to-input" data-lang-key="to">To</label>
-                        <input type="text" id="to-input" data-lang-key-placeholder="to_placeholder" placeholder="Destination" value="Thapathali Bridge">
+                        <input type="text" id="to-input" list="locations-datalist" data-lang-key-placeholder="to_placeholder" placeholder="Destination" value="Thapathali Bridge">
                     </div>
+                    <datalist id="locations-datalist"></datalist>
                 </div>
                 <div id="route-details"></div>
                 <div class="route-actions">
