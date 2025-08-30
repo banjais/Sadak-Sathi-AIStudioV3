@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="copyright" content="Copyright (c) 2024 Your Company or Name. All Rights Reserved.">
+    <title>Sadak Sathi - Your Road Companion</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.15.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="app-container" data-theme="light" data-mode="driving">
+        <!-- Map container -->
+        <div id="map"></div>
+
+        <!-- Header -->
+        <header id="app-header">
+            <div class="header-left">
+                <div class="app-title">
+                    <h1>Sadak Sathi</h1>
+                    <p class="app-subtitle">Your Smart Road Companion</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div id="user-info-widget">
+                    <div id="weather-widget">
+                        <span class="material-icons" id="weather-icon">sunny</span>
+                        <span id="weather-temp">25°C</span>
+                    </div>
+                    <div id="location-widget">
+                        <span id="location-name">Kathmandu</span>
+                        <span id="location-coords">27.70, 85.32</span>
+                    </div>
+                </div>
+                <div id="gps-status-indicator" title="GPS Status: Searching..."></div>
+                <button id="profile-btn" class="icon-button" aria-label="Profile">
+                    <span class="material-icons">person</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Settings Panel -->
+        <aside id="settings-panel">
+            <div class="settings-section">
+                <h3 data-lang-key="route_preferences">Route Preferences</h3>
+                <label class="setting-item">
+                    <span data-lang-key="prefer_highways">Prefer Highways</span>
+                    <input type="checkbox" id="pref-highways" role="switch">
+                </label>
+                <label class="setting-item">
+                    <span data-lang-key="avoid_tolls">Avoid Tolls</span>
+                    <input type="checkbox" id="pref-no-tolls" role="switch">
+                </label>
+                <label class="setting-item">
+                    <span data-lang-key="prefer_scenic_route">Prefer Scenic Route</span>
+                    <input type="checkbox" id="pref-scenic" role="switch">
+                </label>
+            </div>
+            <hr>
+            <div class="settings-section">
+                <h3>App Settings</h3>
+                 <div class="setting-item">
+                    <label for="language-select">Language</label>
+                    <select id="language-select" aria-label="Select language">
+                        <option value="en">English</option>
+                        <option value="np">नेपाली</option>
+                        <option value="hi">हिन्दी</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="zh">中文</option>
+                        <option value="ja">日本語</option>
+                        <option value="ko">한국어</option>
+                        <option value="new">नेवाः</option>
+                        <option value="mai">मैथिली</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <span>Dark Mode</span>
+                    <button id="theme-toggle" class="icon-button" aria-label="Toggle dark mode">
+                        <span class="material-icons">light_mode</span>
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <span data-lang-key="ai_voice_response">AI Voice Response</span>
+                    <input type="checkbox" id="toggle-voice-response" role="switch" checked>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Overlays -->
+        <div id="map-overlays-top-right">
+            <div class="cockpit-item" id="speed-widget">
+                <span class="value">0</span>
+                <span class="label">km/h</span>
+            </div>
+            <div class="cockpit-item" id="compass-widget">
+                 <div class="compass-rose">N</div>
+            </div>
+        </div>
+
+        <div id="map-overlays-bottom-right">
+             <div id="layers-panel">
+                <div class="layer-toggle">
+                    <input type="checkbox" id="toggle-roads" checked>
+                    <label for="toggle-roads" data-lang-key="roads">Roads</label>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="toggle-pois" checked>
+                    <label for="toggle-pois" data-lang-key="pois">Points of Interest</label>
+                </div>
+                <div class="layer-toggle">
+                    <input type="checkbox" id="toggle-incidents" checked>
+                    <label for="toggle-incidents" data-lang-key="incidents">Incidents</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Location Button -->
+        <button id="center-location-btn" class="icon-button" aria-label="Center on my location">
+            <span class="material-icons">my_location</span>
+        </button>
+
+        <!-- Onboard/Display Panel -->
+        <section id="display-panel">
+             <div id="display-panel-header" class="panel-header">
+                <h2 data-lang-key="display_panel_title">Nearby Information</h2>
+                <span class="material-icons panel-toggle-icon">expand_less</span>
+            </div>
+            <div id="display-panel-content">
+                <div id="display-panel-filters">
+                    <!-- Filter buttons injected here -->
+                </div>
+                <div id="display-panel-list">
+                    <!-- Cards will be injected here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Driver Dashboard -->
+        <aside id="driver-dashboard">
+            <div id="driver-status-widget" class="dashboard-widget">
+                <div class="widget-header">
+                    <span class="material-icons">sentiment_satisfied</span>
+                    <span>Driver Status</span>
+                </div>
+                <div id="driver-status">
+                    <span class="material-icons" id="driver-status-icon">sentiment_very_satisfied</span>
+                    <h3 id="driver-status-text">Calm</h3>
+                </div>
+            </div>
+            <div id="vehicle-health-widget" class="dashboard-widget">
+                <div class="widget-header">
+                     <span class="material-icons">directions_car</span>
+                    <span>Vehicle Health</span>
+                </div>
+                <div class="vehicle-vitals">
+                    <div class="vehicle-vital">
+                        <div class="vital-label"><span>Fuel Level</span><span id="fuel-value">85%</span></div>
+                        <div class="progress-bar-container"><div id="fuel-bar" class="progress-bar bar-good"></div></div>
+                    </div>
+                    <div class="vehicle-vital">
+                        <div class="vital-label"><span>Engine Temp</span><span id="temp-value">90°C</span></div>
+                        <div class="progress-bar-container"><div id="temp-bar" class="progress-bar bar-good"></div></div>
+                    </div>
+                    <div class="vehicle-vital">
+                        <div class="vital-label"><span>Tire Pressure</span><span id="pressure-value">32 PSI</span></div>
+                        <div class="progress-bar-container"><div id="pressure-bar" class="progress-bar bar-good"></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Route Finder Panel (Modal) -->
+        <div id="route-finder-panel" class="hidden">
+            <div class="panel-content">
+                <div class="panel-header">
+                    <h2 data-lang-key="route_finder">Route Finder</h2>
+                    <button id="route-finder-close" class="icon-button" aria-label="Close">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="route-inputs">
+                    <div class="input-group">
+                        <label for="from-input">From</label>
+                        <input type="text" id="from-input" placeholder="Start location" value="Maitighar Mandala">
+                    </div>
+                    <div class="input-group">
+                        <label for="to-input">To</label>
+                        <input type="text" id="to-input" placeholder="Destination" value="Thapathali Bridge">
+                    </div>
+                </div>
+                <div id="route-details"></div>
+                <div class="route-actions">
+                    <button id="find-route-btn" data-lang-key="find_route_btn">Find Optimal Route</button>
+                    <button id="share-route-btn" class="secondary hidden">
+                        <span class="material-icons">share</span>
+                        <span data-lang-key="share_route">Share Route</span>
+                    </button>
+                    <button id="clear-route-btn" class="secondary" data-lang-key="clear_route_btn">Clear Route</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Chat Modal -->
+        <div id="ai-chat-modal" class="hidden">
+            <div class="chat-panel">
+                <div class="panel-header" id="ai-chat-header">
+                    <h2 data-lang-key="ai_chat_title">AI Assistant</h2>
+                    <button id="ai-chat-close" class="icon-button" aria-label="Close Chat">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be injected here -->
+                </div>
+                <div class="chat-input-area">
+                    <div class="typing-indicator hidden" id="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <form id="chat-form">
+                        <input type="text" id="chat-input" data-lang-key-placeholder="ai_chat_placeholder" placeholder="Type a message..." autocomplete="off">
+                        <button type="submit" class="icon-button" aria-label="Send Message">
+                            <span class="material-icons">send</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Mode Modal -->
+        <div id="app-mode-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3 data-lang-key="select_mode">Select Mode</h3>
+                <div class="mode-selection">
+                    <button class="mode-select-btn" data-mode="driving">
+                        <span class="material-icons">directions_car</span>
+                        <span data-lang-key="mode_driving">Driving</span>
+                    </button>
+                    <button class="mode-select-btn" data-mode="riding">
+                        <span class="material-icons">person</span>
+                        <span data-lang-key="mode_riding">Riding</span>
+                    </button>
+                    <button class="mode-select-btn" data-mode="exploring">
+                        <span class="material-icons">explore</span>
+                        <span data-lang-key="mode_exploring">Exploring</span>
+                    </button>
+                    <button class="mode-select-btn" data-mode="connect">
+                        <span class="material-icons">group</span>
+                        <span data-lang-key="mode_connect">Connect</span>
+                    </button>
+                </div>
+                <button id="app-mode-modal-close" class="modal-close-btn icon-button" aria-label="Close">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- SOS Modal -->
+        <div id="sos-modal" class="modal-overlay hidden">
+             <div class="modal-content">
+                <h3 data-lang-key="emergency_sos">Emergency SOS</h3>
+                <p data-lang-key="sos_message">Sending your location to emergency contacts...</p>
+                 <button id="sos-modal-close" class="modal-close-btn icon-button" aria-label="Close">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Share Trip Modal -->
+        <div id="share-trip-modal" class="modal-overlay hidden">
+             <div class="modal-content">
+                <h3 data-lang-key="share_trip">Share Trip</h3>
+                <div id="start-sharing-content">
+                    <p data-lang-key="share_trip_desc">Share a live link of your journey with friends and family.</p>
+                    <button id="start-sharing-btn" class="primary-btn">
+                        <span class="material-icons">share</span>
+                        <span data-lang-key="start_sharing">Start Sharing</span>
+                    </button>
+                </div>
+                 <div id="stop-sharing-content" class="hidden">
+                    <p data-lang-key="sharing_active">Live location sharing is active.</p>
+                    <button id="stop-sharing-btn" class="danger-btn">
+                         <span class="material-icons">stop_circle</span>
+                        <span data-lang-key="stop_sharing">Stop Sharing</span>
+                    </button>
+                </div>
+                <button id="share-trip-modal-close" class="modal-close-btn icon-button" aria-label="Close">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Bottom Menu / Nav -->
+        <nav id="bottom-menu">
+            <button id="hamburger-menu" class="menu-item" aria-label="Open settings">
+                <span class="blinking-dot"></span>
+                <span class="material-icons">menu</span>
+                <span class="label" data-lang-key="menu_settings">Settings</span>
+            </button>
+            
+            <!-- Dynamic Mode Button -->
+            <button id="app-mode-btn" class="menu-item" aria-label="Change App Mode">
+                <span class="material-icons">directions_car</span>
+                <span class="label" data-lang-key="mode_driving">Driving</span>
+            </button>
+
+            <button id="route-finder-trigger" class="menu-action-button" aria-label="Open Route Finder">
+                <span class="material-icons">directions</span>
+            </button>
+            
+            <!-- Contextual Action Buttons -->
+            <button id="dashboard-btn" class="menu-item" aria-label="Open Driver Dashboard">
+                <span class="material-icons">dashboard</span>
+                <span class="label" data-lang-key="menu_dashboard">Dashboard</span>
+            </button>
+            <button id="sos-btn" class="menu-item hidden" aria-label="SOS">
+                <span class="material-icons">sos</span>
+                <span class="label" data-lang-key="menu_sos">SOS</span>
+            </button>
+            <button id="share-trip-btn" class="menu-item hidden" aria-label="Share Trip">
+                <span class="material-icons">share_location</span>
+                <span class="label" data-lang-key="menu_share_trip">Share Trip</span>
+            </button>
+
+            <button id="ai-assistant" class="menu-action-button" aria-label="AI Assistant">
+                <span class="material-icons">mic</span>
+            </button>
+        </nav>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="index.tsx"></script>
+</body>
+</html>
