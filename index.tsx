@@ -138,7 +138,7 @@ const englishTranslations = {
     dark_mode: "Dark Mode",
     toggle_dark_mode: "Toggle dark mode",
     ai_voice_response: "AI Voice Response",
-    layers: "Layers",
+    layers: "Data Layers",
     roads: "Roads",
     pois: "Points of Interest",
     incidents: "Incidents",
@@ -230,7 +230,7 @@ const nepaliTranslations = {
     dark_mode: "डार्क मोड",
     toggle_dark_mode: "डार्क मोड टगल गर्नुहोस्",
     ai_voice_response: "एआई आवाज प्रतिक्रिया",
-    layers: "तहहरू",
+    layers: "डाटा तहहरू",
     roads: "सडकहरू",
     pois: "चासोका ठाउँहरू",
     incidents: "घटनाहरू",
@@ -322,7 +322,7 @@ const hindiTranslations = {
     dark_mode: "डार्क मोड",
     toggle_dark_mode: "डार्क मोड टॉगल करें",
     ai_voice_response: "एआई वॉयस रिस्पांस",
-    layers: "परतें",
+    layers: "डेटा परतें",
     roads: "सड़कें",
     pois: "रुचि के बिंदु",
     incidents: "घटनाएँ",
@@ -519,7 +519,7 @@ function initMap() {
     map = L.map('map', {
         center: [27.7172, 85.3240], // Kathmandu
         zoom: 13,
-        zoomControl: false // We will add it manually to a different container
+        zoomControl: false // We are using custom controls
     });
 
     baseLayers = {
@@ -539,15 +539,6 @@ function initMap() {
 
     currentBaseLayer = baseLayers['streets'];
     currentBaseLayer.addTo(map);
-
-    // Add zoom control to our custom container
-    const zoomControl = L.control.zoom({ position: 'bottomright' });
-    zoomControl.addTo(map);
-    // Move the zoom control's DOM elements into our unified container
-    const mapControlsContainer = document.getElementById('map-controls-container')!;
-    const zoomControlContainer = zoomControl.getContainer()!;
-    mapControlsContainer.prepend(zoomControlContainer);
-
 
     poisLayer = L.featureGroup().addTo(map);
     incidentsLayer = L.featureGroup().addTo(map);
@@ -1183,13 +1174,6 @@ function setupEventListeners() {
         });
     });
 
-    // Center Map
-    centerBtn.addEventListener('click', () => {
-        if (userMarker) {
-            map.flyTo(userMarker.getLatLng(), 15);
-        }
-    });
-
     // AI Chat
     aiAssistantBtn.addEventListener('click', () => chatModal.classList.remove('hidden'));
     closeChatBtn.addEventListener('click', () => chatModal.classList.add('hidden'));
@@ -1320,9 +1304,20 @@ function setupEventListeners() {
     // Voice Command Button
     document.getElementById('voice-command-btn')!.addEventListener('click', handleVoiceCommand);
 
-    // UNIFIED MAP OPTIONS
+    // NEW MAP CONTROLS
     const mapOptionsBtn = document.getElementById('map-options-btn')!;
     const mapOptionsPopup = document.getElementById('map-options-popup')!;
+
+    // Custom Zoom controls
+    document.getElementById('zoom-in-btn')!.addEventListener('click', () => map.zoomIn());
+    document.getElementById('zoom-out-btn')!.addEventListener('click', () => map.zoomOut());
+
+    // Center Map
+    centerBtn.addEventListener('click', () => {
+        if (userMarker) {
+            map.flyTo(userMarker.getLatLng(), 15);
+        }
+    });
 
     // Data Layer Toggles in new popup
     document.getElementById('toggle-roads')!.addEventListener('change', (e) => {

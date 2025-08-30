@@ -537,10 +537,10 @@ html, body {
 .card-status.under-maintenance { background-color: var(--warning-color); }
 .card-status.incident { background-color: var(--danger-color); }
 
-/* Map Overlays */
+/* Map Overlays & NEW Controls */
 #map-overlays-top-right {
     position: absolute;
-    top: 70px;
+    top: 80px;
     right: 10px;
     z-index: 999;
     display: flex;
@@ -548,6 +548,7 @@ html, body {
     gap: 10px;
     align-items: flex-end;
 }
+
 .cockpit-item {
     background: var(--header-bg-color);
     backdrop-filter: blur(5px);
@@ -567,27 +568,20 @@ html, body {
 #speed-widget .label { font-size: 0.75rem; color: var(--text-color-muted); }
 #compass-widget .compass-rose { font-size: 1.5rem; font-weight: bold; }
 
-
-/* NEW: Unified Map Controls Container */
+/* Redesigned Vertical Map Controls Container */
 #map-controls-container {
-    position: absolute;
-    bottom: 90px; /* Clearance for bottom menu */
-    right: 10px;
-    z-index: 999;
     display: flex;
     flex-direction: column;
-    gap: 0; /* Controls will be joined */
-    align-items: center;
     background: var(--header-bg-color);
     backdrop-filter: blur(5px);
     border-radius: 8px;
     box-shadow: 0 2px 8px var(--shadow-color);
-    overflow: hidden;
+    overflow: hidden; /* Ensures child borders don't poke out of rounded corners */
 }
 
 .map-control-button {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     background: none;
     border: none;
     border-bottom: 1px solid var(--border-color);
@@ -598,8 +592,9 @@ html, body {
     justify-content: center;
     transition: background-color 0.2s, transform 0.1s;
 }
-
-.map-control-button:last-child {
+/* Remove border from the last button in the stack */
+#map-controls-container > *:last-child > .map-control-button,
+#map-controls-container > .map-control-button:last-of-type {
     border-bottom: none;
 }
 
@@ -610,7 +605,7 @@ html, body {
     background-color: rgba(255,255,255,0.1);
 }
 .map-control-button:active {
-    transform: scale(0.95);
+    transform: scale(0.9);
 }
 
 #map-options-selector {
@@ -620,14 +615,15 @@ html, body {
 
 #map-options-popup {
     position: absolute;
-    bottom: 0; /* Aligns with the bottom of the trigger button */
-    right: 54px; /* 44px button width + 10px spacing */
+    top: 0;
+    right: 50px; /* Aligns to the left of the 40px button + 10px gap */
     width: 240px;
     background: var(--header-bg-color);
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
     border-radius: 8px;
-    box-shadow: 0 2px 8px var(--shadow-color);
+    box-shadow: 0 4px 15px var(--shadow-color);
     padding: 0.75rem;
+    border: 1px solid var(--border-color);
 }
 #map-options-popup hr {
     border: none;
@@ -672,38 +668,17 @@ html, body {
     gap: 8px;
     margin-bottom: 8px;
     font-size: 0.9rem;
+    cursor: pointer;
 }
 .layer-toggle:last-child { margin-bottom: 0; }
+.layer-toggle input {
+    accent-color: var(--primary-color);
+}
 
-/* Leaflet control repositioning */
+
+/* Leaflet control repositioning - NO LONGER NEEDED */
 .leaflet-control-zoom {
-    border: none !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    display: contents; /* Allows buttons to be styled by parent */
-}
-.leaflet-control-zoom-in, .leaflet-control-zoom-out {
-    width: 44px !important;
-    height: 44px !important;
-    line-height: 44px !important;
-    background: none !important;
-    color: var(--text-color) !important;
-    border: none !important;
-    border-radius: 0 !important;
-    transition: background-color 0.2s, transform 0.1s !important;
-}
-.leaflet-control-zoom-in {
-    border-bottom: 1px solid var(--border-color) !important;
-}
-.leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
-    background-color: rgba(0,0,0,0.1) !important;
-}
-[data-theme="dark"] .leaflet-control-zoom-in:hover, 
-[data-theme="dark"] .leaflet-control-zoom-out:hover {
-    background-color: rgba(255,255,255,0.1) !important;
-}
-.leaflet-control-zoom-in:active, .leaflet-control-zoom-out:active {
-     transform: scale(0.95);
+    display: none !important; /* Hide default leaflet zoom */
 }
 
 /* General leaflet popup customization */

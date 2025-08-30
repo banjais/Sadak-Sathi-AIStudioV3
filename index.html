@@ -27,7 +27,7 @@
             <div class="header-left">
                 <div class="app-title">
                     <h1>Sadak Sathi</h1>
-                    <p class="app-subtitle" data-lang-key="app_subtitle">Your Smart Road Companion</p>
+                    <p class="app-subtitle" data-lang-key="app_subtitle">Your Road Companion</p>
                 </div>
             </div>
             <div class="header-right">
@@ -147,49 +147,48 @@
             <div class="cockpit-item" id="compass-widget">
                  <div class="compass-rose">N</div>
             </div>
-        </div>
-        
-        <!-- NEW UNIFIED MAP CONTROLS -->
-        <div id="map-controls-container">
-            <!-- Leaflet's zoom control is programmatically added here -->
-            <button id="center-location-btn" class="map-control-button" data-lang-key-aria-label="center_location" aria-label="Center on my location">
-                <span class="material-icons">my_location</span>
-            </button>
-             <div id="map-options-selector">
-                <button id="map-options-btn" class="map-control-button" data-lang-key-aria-label="layers" aria-label="Map Options">
-                    <span class="material-icons">tune</span>
+             <!-- NEW VERTICAL MAP CONTROLS -->
+            <div id="map-controls-container">
+                <button id="zoom-in-btn" class="map-control-button" aria-label="Zoom in"><span class="material-icons">add</span></button>
+                <button id="zoom-out-btn" class="map-control-button" aria-label="Zoom out"><span class="material-icons">remove</span></button>
+                <button id="center-location-btn" class="map-control-button" data-lang-key-aria-label="center_location" aria-label="Center on my location">
+                    <span class="material-icons">my_location</span>
                 </button>
-                <div id="map-options-popup" class="hidden">
-                    <div class="map-options-section">
-                        <h4 data-lang-key="layers">Layers</h4>
-                         <div class="layer-toggle">
-                            <input type="checkbox" id="toggle-roads" checked>
-                            <label for="toggle-roads" data-lang-key="roads">Roads</label>
+                <div id="map-options-selector">
+                    <button id="map-options-btn" class="map-control-button" data-lang-key-aria-label="layers" aria-label="Map Options">
+                        <span class="material-icons">layers</span>
+                    </button>
+                    <div id="map-options-popup" class="hidden">
+                        <div class="map-options-section">
+                            <h4>Map Style</h4>
+                            <div class="style-options-grid">
+                                <button class="style-option active" data-style="streets" data-lang-key="map_style_streets">Streets</button>
+                                <button class="style-option" data-style="satellite" data-lang-key="map_style_satellite">Satellite</button>
+                                <button class="style-option" data-style="terrain" data-lang-key="map_style_terrain">Terrain</button>
+                                <button class="style-option" data-style="dark" data-lang-key="map_style_dark">Dark</button>
+                            </div>
                         </div>
-                        <div class="layer-toggle">
-                            <input type="checkbox" id="toggle-pois" checked>
-                            <label for="toggle-pois" data-lang-key="pois">Points of Interest</label>
-                        </div>
-                        <div class="layer-toggle">
-                            <input type="checkbox" id="toggle-incidents" checked>
-                            <label for="toggle-incidents" data-lang-key="incidents">Incidents</label>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="map-options-section">
-                        <h4>Map Style</h4>
-                        <div class="style-options-grid">
-                            <button class="style-option active" data-style="streets" data-lang-key="map_style_streets">Streets</button>
-                            <button class="style-option" data-style="satellite" data-lang-key="map_style_satellite">Satellite</button>
-                            <button class="style-option" data-style="terrain" data-lang-key="map_style_terrain">Terrain</button>
-                            <button class="style-option" data-style="dark" data-lang-key="map_style_dark">Dark</button>
+                        <hr>
+                        <div class="map-options-section">
+                            <h4 data-lang-key="layers">Data Layers</h4>
+                             <label class="layer-toggle">
+                                <input type="checkbox" id="toggle-roads" checked>
+                                <span data-lang-key="roads">Roads</span>
+                            </label>
+                            <label class="layer-toggle">
+                                <input type="checkbox" id="toggle-pois" checked>
+                                <span data-lang-key="pois">Points of Interest</span>
+                            </label>
+                            <label class="layer-toggle">
+                                <input type="checkbox" id="toggle-incidents" checked>
+                                <span data-lang-key="incidents">Incidents</span>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
+        
         <!-- Onboard/Display Panel -->
         <section id="display-panel">
              <div id="display-panel-header" class="panel-header">
