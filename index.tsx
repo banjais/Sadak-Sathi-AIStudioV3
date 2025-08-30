@@ -1397,17 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             mapStyleOptions.classList.toggle('hidden');
         });
-        mapStyleOptions.addEventListener('click', (e) => {
-            const target = e.target as HTMLButtonElement;
-            if (target.matches('.style-option')) {
-                const style = target.dataset.style;
-                if (style) {
-                    setBaseLayer(style);
-                    mapStyleOptions.classList.add('hidden');
-                }
-            }
-        });
-         document.addEventListener('click', (e) => {
+        document.addEventListener('click', (e) => {
             if (!mapStyleBtn.contains(e.target as Node) && !mapStyleOptions.contains(e.target as Node)) {
                 mapStyleOptions.classList.add('hidden');
             }
