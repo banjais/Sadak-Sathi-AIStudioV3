@@ -96,11 +96,17 @@ let routeEndMarker: L.Marker | null = null;
 let currentLang = 'en';
 let allPois: any[] = [];
 let allIncidents: any[] = [];
+let allRoadsData: any = null;
 let isVoiceResponseEnabled = true; // State for AI voice response feature
 let isAudioUnlocked = false; // Flag to check if user interaction has occurred
 let activeChat: any = null; // To hold the AI chat session
 let currentAppMode: 'driving' | 'riding' | 'exploring' | 'connect' = 'driving';
 let isSharingTrip = false;
+let routePreferences = {
+    preferHighways: false,
+    avoidTolls: false,
+    preferScenic: false
+};
 
 // =================================================================================
 // Internationalization (i18n)
@@ -368,6 +374,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const savedMode = localStorage.getItem('appMode') as typeof currentAppMode || 'driving';
         updateAppMode(savedMode);
+
+        const savedPrefs = localStorage.getItem('routePreferences');
+        if (savedPrefs) {
+            routePreferences = JSON.parse(savedPrefs);
+            (document.getElementById('pref-highways') as HTMLInputElement).checked = routePreferences.preferHighways;
+            (document.getElementById('pref-no-tolls') as HTMLInputElement).checked = routePreferences.avoidTolls;
+            (document.getElementById('pref-scenic') as HTMLInputElement).checked = routePreferences.preferScenic;
+        }
     };
 
     const setupMap = () => {
@@ -382,8 +396,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadData = async () => {
-        const roadsData = await api.getRoads();
-        roadsLayer = L.geoJSON(roadsData, { style: (f) => ({ color: f.properties.status === 'good' ? "#2ecc71" : f.properties.status === 'fair' ? "#f39c12" : "#e74c3c", weight: 5, dashArray: f.properties.status === 'poor' ? '5, 10' : undefined }) }).bindPopup(l => l.feature.properties.name).addTo(map);
+        allRoadsData = await api.getRoads();
+        roadsLayer = L.geoJSON(allRoadsData, { style: (f) => ({ color: f.properties.status === 'good' ? "#2ecc71" : f.properties.status === 'fair' ? "#f39c12" : "#e74c3c", weight: 5, dashArray: f.properties.status === 'poor' ? '5, 10' : undefined }) }).bindPopup(l => l.feature.properties.name).addTo(map);
         allPois = await api.getPOIs();
         allIncidents = await api.getIncidents();
         renderPois(allPois);
@@ -733,14 +747,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- NEW: Route Finder Implementation ---
+        // --- Route Preferences Implementation ---
+        const prefHighways = document.getElementById('pref-highways') as HTMLInputElement;
+        const prefNoTolls = document.getElementById('pref-no-tolls') as HTMLInputElement;
+        const prefScenic = document.getElementById('pref-scenic') as HTMLInputElement;
+        const updatePref = (key: keyof typeof routePreferences, value: boolean) => {
+            routePreferences[key] = value;
+            localStorage.setItem('routePreferences', JSON.stringify(routePreferences));
+        };
+        prefHighways.addEventListener('change', () => updatePref('preferHighways', prefHighways.checked));
+        prefNoTolls.addEventListener('change', () => updatePref('avoidTolls', prefNoTolls.checked));
+        prefScenic.addEventListener('change', () => updatePref('preferScenic', prefScenic.checked));
+
+
+        // --- Route Finder Implementation (AI-Powered) ---
         const fromInput = document.getElementById('from-input') as HTMLInputElement;
         const toInput = document.getElementById('to-input') as HTMLInputElement;
-        const findRouteBtn = document.getElementById('find-route-btn')!;
+        const findRouteBtn = document.getElementById('find-route-btn')! as HTMLButtonElement;
         const clearRouteBtn = document.getElementById('clear-route-btn')!;
         const shareRouteBtn = document.getElementById('share-route-btn')!;
 
-        findRouteBtn.addEventListener('click', () => {
+        findRouteBtn.addEventListener('click', async () => {
             const fromName = fromInput.value.trim();
             const toName = toInput.value.trim();
 
@@ -756,47 +783,111 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Could not find one or both locations. Please use exact names from the list.");
                 return;
             }
-
-            // Clear previous route if it exists
-            if (routeLine) map.removeLayer(routeLine);
-            if (routeStartMarker) map.removeLayer(routeStartMarker);
-            if (routeEndMarker) map.removeLayer(routeEndMarker);
-
-            const latlngs = [
-                [fromPoi.lat, fromPoi.lng],
-                [toPoi.lat, toPoi.lng]
-            ];
-
-            // Updated route style for better visibility
-            routeLine = L.polyline(latlngs, { 
-                color: '#3498db', 
-                weight: 8, 
-                opacity: 0.9,
-                dashArray: '10, 5' // Dashed line
-            }).addTo(map);
             
-            // Add custom start and end markers
-            const startIcon = L.divIcon({
-                html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim()};">location_on</span>`,
-                className: 'route-marker-icon',
-                iconSize: [36, 36],
-                iconAnchor: [18, 36] // Anchor at the bottom center
-            });
-            const endIcon = L.divIcon({
-                html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim()};">flag</span>`,
-                className: 'route-marker-icon',
-                iconSize: [36, 36],
-                iconAnchor: [5, 36] // Anchor at the bottom left (approx)
-            });
-            
-            routeStartMarker = L.marker(latlngs[0], { icon: startIcon }).addTo(map).bindPopup(`<b>Start:</b> ${fromPoi.name}`);
-            routeEndMarker = L.marker(latlngs[1], { icon: endIcon }).addTo(map).bindPopup(`<b>Destination:</b> ${toPoi.name}`);
+            try {
+                findRouteBtn.textContent = "Calculating...";
+                findRouteBtn.disabled = true;
 
-            const bounds = L.latLngBounds(latlngs);
-            map.fitBounds(bounds.pad(0.2)); // pad adds some margin
+                const prompt = `
+                    You are a route planning assistant for Kathmandu, Nepal. Your task is to select a sequence of named road segments to form the best route between two points, based on user preferences.
 
-            shareRouteBtn.classList.remove('hidden');
-            routeFinderPanel.classList.add('hidden'); // Close panel after finding route
+                    Available Roads Data (as GeoJSON features):
+                    ${JSON.stringify(allRoadsData.features)}
+
+                    Start Point: "${fromName}" (approximately at [${fromPoi.lng}, ${fromPoi.lat}])
+                    End Point: "${toName}" (approximately at [${toPoi.lng}, ${toPoi.lat}])
+
+                    User Routing Preferences:
+                    - Prefer Highways: ${routePreferences.preferHighways}
+                    - Avoid Tolls: ${routePreferences.avoidTolls}
+                    - Prefer Scenic Route: ${routePreferences.preferScenic}
+
+                    Please determine the optimal route. Your response must be a JSON object with a single key "route", which is an array of the exact 'name' properties of the road features to use, in the correct sequential order.
+                    Example response: {"route": ["Prithvi Highway", "Local Road", "Araniko Highway"]}
+                `;
+
+                const responseSchema = {
+                    type: Type.OBJECT,
+                    properties: {
+                        route: {
+                            type: Type.ARRAY,
+                            description: "An array of road names representing the route in sequential order.",
+                            items: {
+                                type: Type.STRING,
+                                description: "The name of a road segment."
+                            }
+                        }
+                    },
+                    required: ["route"]
+                };
+
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: prompt,
+                    config: {
+                        responseMimeType: "application/json",
+                        responseSchema: responseSchema,
+                    }
+                });
+                
+                const result = JSON.parse(response.text);
+                const roadNames: string[] = result.route;
+
+                if (!roadNames || roadNames.length === 0) {
+                    alert("The AI could not determine a route. Please try different locations or preferences.");
+                    return;
+                }
+
+                const routeCoordinates: L.LatLng[] = [];
+                roadNames.forEach(name => {
+                    const roadFeature = allRoadsData.features.find((f: any) => f.properties.name === name);
+                    if (roadFeature) {
+                        const swappedCoords = roadFeature.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as L.LatLng);
+                        routeCoordinates.push(...swappedCoords);
+                    }
+                });
+                
+                if (routeCoordinates.length === 0) {
+                     alert("Could not find geometric data for the suggested route. Please check the data source.");
+                     return;
+                }
+
+                if (routeLine) map.removeLayer(routeLine);
+                if (routeStartMarker) map.removeLayer(routeStartMarker);
+                if (routeEndMarker) map.removeLayer(routeEndMarker);
+
+                routeLine = L.polyline(routeCoordinates, { 
+                    color: '#3498db', 
+                    weight: 8, 
+                    opacity: 0.9,
+                    dashArray: '10, 5'
+                }).addTo(map);
+
+                const startIcon = L.divIcon({
+                    html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim()};">location_on</span>`,
+                    className: 'route-marker-icon', iconSize: [36, 36], iconAnchor: [18, 36]
+                });
+                const endIcon = L.divIcon({
+                    html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim()};">flag</span>`,
+                    className: 'route-marker-icon', iconSize: [36, 36], iconAnchor: [5, 36]
+                });
+
+                routeStartMarker = L.marker([fromPoi.lat, fromPoi.lng], { icon: startIcon }).addTo(map).bindPopup(`<b>Start:</b> ${fromPoi.name}`);
+                routeEndMarker = L.marker([toPoi.lat, toPoi.lng], { icon: endIcon }).addTo(map).bindPopup(`<b>Destination:</b> ${toPoi.name}`);
+
+                const bounds = L.latLngBounds(routeCoordinates);
+                map.fitBounds(bounds.pad(0.2));
+
+                shareRouteBtn.classList.remove('hidden');
+                routeFinderPanel.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Error finding AI route:", error);
+                alert("An error occurred while finding the route. Please try again.");
+            } finally {
+                findRouteBtn.textContent = t('find_route_btn');
+                findRouteBtn.disabled = false;
+            }
         });
 
         clearRouteBtn.addEventListener('click', () => {
@@ -813,7 +904,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 routeEndMarker = null;
             }
             shareRouteBtn.classList.add('hidden');
-            // Do not clear inputs to allow for easy modification
         });
         // --- END: Route Finder Implementation ---
 
