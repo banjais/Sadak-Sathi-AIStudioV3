@@ -539,14 +539,13 @@ function initMap() {
     currentBaseLayer = baseLayers['streets'];
     currentBaseLayer.addTo(map);
 
-    // Add zoom control to the bottom right
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    // Position the center button relative to the zoom control
-    const zoomControl = document.querySelector('.leaflet-control-zoom');
-    const centerBtn = document.getElementById('center-location-btn')!;
-    if (zoomControl) {
-        (zoomControl.parentNode as HTMLElement).appendChild(centerBtn);
-    }
+    // Add zoom control to our custom container
+    const zoomControl = L.control.zoom({ position: 'bottomright' });
+    zoomControl.addTo(map);
+    // Move the zoom control's DOM elements into our unified container
+    const mapControlsContainer = document.getElementById('map-controls-container')!;
+    const zoomControlContainer = zoomControl.getContainer()!;
+    mapControlsContainer.prepend(zoomControlContainer);
 
 
     poisLayer = L.featureGroup().addTo(map);
@@ -1276,17 +1275,6 @@ function setupEventListeners() {
     // Display Panel Toggle
     displayPanelHeader.addEventListener('click', () => displayPanel.classList.toggle('collapsed'));
 
-    // Data Layer Toggles
-    document.getElementById('toggle-roads')!.addEventListener('change', (e) => {
-        map.hasLayer(roadsLayer) ? map.removeLayer(roadsLayer) : map.addLayer(roadsLayer);
-    });
-    document.getElementById('toggle-pois')!.addEventListener('change', (e) => {
-        map.hasLayer(poisLayer) ? map.removeLayer(poisLayer) : map.addLayer(poisLayer);
-    });
-    document.getElementById('toggle-incidents')!.addEventListener('change', (e) => {
-        map.hasLayer(incidentsLayer) ? map.removeLayer(incidentsLayer) : map.addLayer(incidentsLayer);
-    });
-    
     // Route Preferences
     document.getElementById('pref-highways')!.addEventListener('change', e => routePreferences.preferHighways = (e.target as HTMLInputElement).checked);
     document.getElementById('pref-no-tolls')!.addEventListener('change', e => routePreferences.avoidTolls = (e.target as HTMLInputElement).checked);
@@ -1331,13 +1319,22 @@ function setupEventListeners() {
     // Voice Command Button
     document.getElementById('voice-command-btn')!.addEventListener('click', handleVoiceCommand);
 
-    // Map Style Selector
-    const mapStyleBtn = document.getElementById('map-style-btn')!;
-    const mapStyleOptions = document.getElementById('map-style-options')!;
-    mapStyleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mapStyleOptions.classList.toggle('hidden');
+    // UNIFIED MAP OPTIONS
+    const mapOptionsBtn = document.getElementById('map-options-btn')!;
+    const mapOptionsPopup = document.getElementById('map-options-popup')!;
+
+    // Data Layer Toggles in new popup
+    document.getElementById('toggle-roads')!.addEventListener('change', (e) => {
+        map.hasLayer(roadsLayer) ? map.removeLayer(roadsLayer) : map.addLayer(roadsLayer);
     });
+    document.getElementById('toggle-pois')!.addEventListener('change', (e) => {
+        map.hasLayer(poisLayer) ? map.removeLayer(poisLayer) : map.addLayer(poisLayer);
+    });
+    document.getElementById('toggle-incidents')!.addEventListener('change', (e) => {
+        map.hasLayer(incidentsLayer) ? map.removeLayer(incidentsLayer) : map.addLayer(incidentsLayer);
+    });
+
+    // Map Style Selector in new popup
     document.querySelectorAll('.style-option').forEach(btn => {
         btn.addEventListener('click', () => {
             const style = btn.getAttribute('data-style')!;
@@ -1347,7 +1344,6 @@ function setupEventListeners() {
                 currentBaseLayer.addTo(map);
                 document.querySelector('.style-option.active')?.classList.remove('active');
                 btn.classList.add('active');
-                mapStyleOptions.classList.add('hidden');
                 
                 // Remember last light theme map
                 if(style !== 'dark') {
@@ -1357,26 +1353,22 @@ function setupEventListeners() {
         });
     });
 
-    // Data Layer Selector
-    const dataLayersBtn = document.getElementById('data-layers-btn')!;
-    const dataLayersOptions = document.getElementById('data-layers-options')!;
-    dataLayersBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dataLayersOptions.classList.toggle('hidden');
-    });
-
     // Global click listener to close popups
     document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
-        if (!mapStyleOptions.classList.contains('hidden') && !target.closest('#map-style-selector')) {
-            mapStyleOptions.classList.add('hidden');
+        // Close Map Options Popup
+        if (!mapOptionsPopup.classList.contains('hidden') && !target.closest('#map-options-selector')) {
+            mapOptionsPopup.classList.add('hidden');
         }
-        if (!dataLayersOptions.classList.contains('hidden') && !target.closest('#data-layers-selector')) {
-            dataLayersOptions.classList.add('hidden');
-        }
+        // Close Settings Panel
         if (settingsPanel.classList.contains('open') && !target.closest('#settings-panel') && !target.closest('#settings-btn')) {
             settingsPanel.classList.remove('open');
         }
+    });
+
+    mapOptionsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mapOptionsPopup.classList.toggle('hidden');
     });
 
 }

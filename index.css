@@ -567,72 +567,103 @@ html, body {
 #speed-widget .label { font-size: 0.75rem; color: var(--text-color-muted); }
 #compass-widget .compass-rose { font-size: 1.5rem; font-weight: bold; }
 
-/* Map Style Selector */
-#map-style-selector {
-    position: relative;
-}
-#map-style-selector #map-style-btn {
-    width: 44px;
-    height: 44px;
-}
-#map-style-options {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: var(--header-bg-color);
-    backdrop-filter: blur(5px);
-    border-radius: 8px;
-    box-shadow: 0 2px 5px var(--shadow-color);
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-.style-option {
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-}
-.style-option:hover, .style-option.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
 
-
-#map-overlays-bottom-right {
+/* NEW: Unified Map Controls Container */
+#map-controls-container {
     position: absolute;
-    bottom: 90px;
+    bottom: 90px; /* Clearance for bottom menu */
     right: 10px;
     z-index: 999;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-/* Data Layer Selector */
-#data-layers-selector {
-    position: relative;
-}
-#data-layers-selector #data-layers-btn {
-    width: 44px;
-    height: 44px;
-}
-#data-layers-options {
-    position: absolute;
-    bottom: 50px; /* Position above the button */
-    right: 0;
+    gap: 0; /* Controls will be joined */
+    align-items: center;
     background: var(--header-bg-color);
     backdrop-filter: blur(5px);
     border-radius: 8px;
-    box-shadow: 0 2px 5px var(--shadow-color);
-    padding: 1rem;
-    width: max-content; /* Make it wide enough for labels */
+    box-shadow: 0 2px 8px var(--shadow-color);
+    overflow: hidden;
+}
+
+.map-control-button {
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.map-control-button:last-child {
+    border-bottom: none;
+}
+
+.map-control-button:hover {
+    background-color: rgba(0,0,0,0.1);
+}
+[data-theme="dark"] .map-control-button:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+.map-control-button:active {
+    transform: scale(0.95);
+}
+
+#map-options-selector {
+    position: relative;
+    display: flex; /* Required for child positioning */
+}
+
+#map-options-popup {
+    position: absolute;
+    bottom: 0; /* Aligns with the bottom of the trigger button */
+    right: 54px; /* 44px button width + 10px spacing */
+    width: 240px;
+    background: var(--header-bg-color);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    padding: 0.75rem;
+}
+#map-options-popup hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 0.75rem 0;
+}
+.map-options-section h4 {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-color-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.style-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+.style-option {
+    background: var(--bg-color);
+    border: 1px solid transparent;
+    color: var(--text-color);
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.85rem;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.style-option:hover {
+    border-color: var(--primary-color);
+}
+.style-option.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 .layer-toggle {
@@ -640,30 +671,40 @@ html, body {
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
+    font-size: 0.9rem;
 }
 .layer-toggle:last-child { margin-bottom: 0; }
 
 /* Leaflet control repositioning */
 .leaflet-control-zoom {
     border: none !important;
-    box-shadow: 0 2px 5px var(--shadow-color) !important;
-    border-radius: 8px !important;
-    overflow: hidden;
+    box-shadow: none !important;
+    margin: 0 !important;
+    display: contents; /* Allows buttons to be styled by parent */
 }
 .leaflet-control-zoom-in, .leaflet-control-zoom-out {
-    background-color: var(--header-bg-color) !important;
-    color: var(--text-color) !important;
     width: 44px !important;
     height: 44px !important;
     line-height: 44px !important;
+    background: none !important;
+    color: var(--text-color) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    transition: background-color 0.2s, transform 0.1s !important;
 }
 .leaflet-control-zoom-in {
     border-bottom: 1px solid var(--border-color) !important;
 }
 .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
-    background-color: var(--panel-bg-color) !important;
+    background-color: rgba(0,0,0,0.1) !important;
 }
-
+[data-theme="dark"] .leaflet-control-zoom-in:hover, 
+[data-theme="dark"] .leaflet-control-zoom-out:hover {
+    background-color: rgba(255,255,255,0.1) !important;
+}
+.leaflet-control-zoom-in:active, .leaflet-control-zoom-out:active {
+     transform: scale(0.95);
+}
 
 /* General leaflet popup customization */
 .leaflet-popup-content-wrapper {
