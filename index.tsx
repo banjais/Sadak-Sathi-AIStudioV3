@@ -107,6 +107,8 @@ let routePreferences = {
     avoidTolls: false,
     preferScenic: false
 };
+let recognition: any | null = null;
+let isListening = false;
 
 // =================================================================================
 // Internationalization (i18n)
@@ -340,6 +342,128 @@ const t = (key: string): string => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    /**
+     * Finds and draws the optimal route on the map using the AI model.
+     * This function is shared between the manual "Find Route" button and the AI chat command.
+     * @param fromName The name of the starting point.
+     * @param toName The name of the destination.
+     * @returns A promise that resolves to an object indicating success and a message.
+     */
+    const calculateAndDrawRoute = async (fromName: string, toName: string): Promise<{ success: boolean; message: string }> => {
+        const findRouteBtn = document.getElementById('find-route-btn') as HTMLButtonElement;
+        const shareRouteBtn = document.getElementById('share-route-btn')!;
+        const routeFinderPanel = document.getElementById('route-finder-panel')!;
+
+        if (!fromName || !toName) {
+            const message = "Please enter both a start and destination.";
+            alert(message);
+            return { success: false, message: message };
+        }
+
+        const fromPoi = allPois.find(p => p.name.toLowerCase() === fromName.toLowerCase());
+        const toPoi = allPois.find(p => p.name.toLowerCase() === toName.toLowerCase());
+
+        if (!fromPoi || !toPoi) {
+            const message = "Could not find one or both locations. Please use exact names from the list.";
+            alert(message);
+            return { success: false, message: message };
+        }
+
+        findRouteBtn.textContent = "Calculating...";
+        findRouteBtn.disabled = true;
+
+        try {
+            const prompt = `
+                You are a route planning assistant for Kathmandu, Nepal. Your task is to select a sequence of named road segments to form the best route between two points, based on user preferences.
+
+                Available Roads Data (as GeoJSON features):
+                ${JSON.stringify(allRoadsData.features)}
+
+                Start Point: "${fromName}" (approximately at [${fromPoi.lng}, ${fromPoi.lat}])
+                End Point: "${toName}" (approximately at [${toPoi.lng}, ${toPoi.lat}])
+
+                User Routing Preferences:
+                - Prefer Highways: ${routePreferences.preferHighways}
+                - Avoid Tolls: ${routePreferences.avoidTolls}
+                - Prefer Scenic Route: ${routePreferences.preferScenic}
+
+                Please determine the optimal route. Your response must be a JSON object with a single key "route", which is an array of the exact 'name' properties of the road features to use, in the correct sequential order.
+                Example response: {"route": ["Prithvi Highway", "Local Road", "Araniko Highway"]}
+            `;
+
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    route: {
+                        type: Type.ARRAY,
+                        description: "An array of road names representing the route in sequential order.",
+                        items: { type: Type.STRING, description: "The name of a road segment." }
+                    }
+                },
+                required: ["route"]
+            };
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: "application/json", responseSchema: responseSchema }
+            });
+
+            const result = JSON.parse(response.text);
+            const roadNames: string[] = result.route;
+
+            if (!roadNames || roadNames.length === 0) {
+                const message = "The AI could not determine a route. Please try different locations or preferences.";
+                alert(message);
+                return { success: false, message: message };
+            }
+
+            const routeCoordinates: L.LatLng[] = [];
+            roadNames.forEach(name => {
+                const roadFeature = allRoadsData.features.find((f: any) => f.properties.name === name);
+                if (roadFeature) {
+                    const swappedCoords = roadFeature.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as L.LatLng);
+                    routeCoordinates.push(...swappedCoords);
+                }
+            });
+
+            if (routeCoordinates.length === 0) {
+                const message = "Could not find geometric data for the suggested route. Please check the data source.";
+                alert(message);
+                return { success: false, message: message };
+            }
+
+            if (routeLine) map.removeLayer(routeLine);
+            if (routeStartMarker) map.removeLayer(routeStartMarker);
+            if (routeEndMarker) map.removeLayer(routeEndMarker);
+
+            routeLine = L.polyline(routeCoordinates, { color: '#3498db', weight: 8, opacity: 0.9, dashArray: '10, 5' }).addTo(map);
+
+            const startIcon = L.divIcon({ html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim()};">location_on</span>`, className: 'route-marker-icon', iconSize: [36, 36], iconAnchor: [18, 36] });
+            const endIcon = L.divIcon({ html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim()};">flag</span>`, className: 'route-marker-icon', iconSize: [36, 36], iconAnchor: [5, 36] });
+
+            routeStartMarker = L.marker([fromPoi.lat, fromPoi.lng], { icon: startIcon }).addTo(map).bindPopup(`<b>Start:</b> ${fromPoi.name}`);
+            routeEndMarker = L.marker([toPoi.lat, toPoi.lng], { icon: endIcon }).addTo(map).bindPopup(`<b>Destination:</b> ${toPoi.name}`);
+
+            const bounds = L.latLngBounds(routeCoordinates);
+            map.fitBounds(bounds.pad(0.2));
+
+            shareRouteBtn.classList.remove('hidden');
+            routeFinderPanel.classList.add('hidden');
+
+            return { success: true, message: `Route from ${fromName} to ${toName} displayed.` };
+
+        } catch (error) {
+            console.error("Error finding AI route:", error);
+            const message = "An error occurred while finding the route. Please try again.";
+            alert(message);
+            return { success: false, message: message };
+        } finally {
+            findRouteBtn.textContent = t('find_route_btn');
+            findRouteBtn.disabled = false;
+        }
+    };
+
     const updateLanguage = (lang: string) => {
         currentLang = lang;
         document.querySelectorAll('[data-lang-key]').forEach(el => {
@@ -459,11 +583,101 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatForm = document.getElementById('chat-form') as HTMLFormElement;
         const chatInput = document.getElementById('chat-input') as HTMLInputElement;
         const typingIndicator = document.getElementById('typing-indicator') as HTMLElement;
-        const tools: Tool[] = [{ functionDeclarations: [{ name: "googleSearch", description: "Search for information about specific points of interest (POIs) and incidents in the local Kathmandu area.", parameters: { type: Type.OBJECT, properties: { searchQuery: { type: Type.STRING, description: "The name of the place or incident to search for (e.g., 'Thapathali Bridge')." } }, required: ["searchQuery"] } }] }];
+        const voiceCommandBtn = document.getElementById('voice-command-btn') as HTMLButtonElement;
+
+        // --- Voice Command Implementation ---
+        if (!SpeechRecognition) {
+            console.warn("Speech Recognition API not supported in this browser.");
+            voiceCommandBtn.style.display = 'none';
+        } else {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                voiceCommandBtn.classList.add('listening');
+                voiceCommandBtn.setAttribute('aria-label', 'Stop listening');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                voiceCommandBtn.classList.remove('listening');
+                voiceCommandBtn.setAttribute('aria-label', 'Use microphone');
+            };
+
+            recognition.onerror = (event: any) => {
+                console.error("Speech recognition error", event.error);
+                isListening = false;
+                voiceCommandBtn.classList.remove('listening');
+                voiceCommandBtn.setAttribute('aria-label', 'Use microphone');
+            };
+
+            recognition.onresult = (event: any) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    chatInput.value = finalTranscript;
+                }
+            };
+            
+            voiceCommandBtn.addEventListener('click', () => {
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    const speechLangMap: { [key: string]: string } = { en: 'en-US', np: 'ne-NP', hi: 'hi-IN', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', new: 'ne-NP', mai: 'hi-IN' };
+                    recognition.lang = speechLangMap[currentLang] || 'en-US';
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error("Could not start recognition service:", e);
+                    }
+                }
+            });
+        }
+        // --- End of Voice Command Implementation ---
+
+
+        const tools: Tool[] = [{
+            functionDeclarations: [
+                {
+                    name: "googleSearch",
+                    description: "Search for information about specific points of interest (POIs) and incidents in the local Kathmandu area.",
+                    parameters: { type: Type.OBJECT, properties: { searchQuery: { type: Type.STRING, description: "The name of the place or incident to search for (e.g., 'Thapathali Bridge')." } }, required: ["searchQuery"] }
+                },
+                {
+                    name: "findRoute",
+                    description: "Finds and displays the optimal route between two specified locations on the map. Use this for requests like 'directions from A to B'.",
+                    parameters: {
+                        type: Type.OBJECT,
+                        properties: {
+                            startLocation: { type: Type.STRING, description: "The starting point of the route (e.g., 'Maitighar Mandala')." },
+                            endLocation: { type: Type.STRING, description: "The destination of the route (e.g., 'Civil Mall')." }
+                        },
+                        required: ["startLocation", "endLocation"]
+                    }
+                }
+            ]
+        }];
+
         const googleSearch = ({ searchQuery }: { searchQuery: string }) => {
             const results = [...allPois, ...allIncidents].filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()));
             return { results: results.length > 0 ? results.map(r => ({ name: r.name, category: r.category, status: r.status })) : `No information found for "${searchQuery}".` };
         };
+
+        const findRoute = ({ startLocation, endLocation }: { startLocation: string; endLocation: string; }) => {
+            (document.getElementById('from-input') as HTMLInputElement).value = startLocation;
+            (document.getElementById('to-input') as HTMLInputElement).value = endLocation;
+            setTimeout(() => {
+                calculateAndDrawRoute(startLocation, endLocation);
+            }, 100);
+            return { result: `Okay, planning the route from ${startLocation} to ${endLocation}.` };
+        };
+
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const userInput = chatInput.value.trim();
@@ -474,18 +688,35 @@ document.addEventListener('DOMContentLoaded', () => {
             typingIndicator.classList.remove('hidden');
             try {
                 if (!activeChat) {
-                     activeChat = ai.chats.create({ model: 'gemini-2.5-flash', config: { tools: tools, systemInstruction: `You are a helpful and proactive road assistant for Nepal called Sadak Sathi. The user is currently in '${currentAppMode}' mode. Tailor your responses accordingly. Use the googleSearch tool for specific locations. You will also receive automated system alerts about driver status and vehicle health; address these proactively.` } });
+                     activeChat = ai.chats.create({ model: 'gemini-2.5-flash', config: { tools: tools, systemInstruction: `You are a helpful and proactive road assistant for Nepal called Sadak Sathi. The user is currently in '${currentAppMode}' mode. Tailor your responses accordingly. Use 'googleSearch' for specific location info and 'findRoute' to plan routes on the map. You will also receive automated system alerts about driver status and vehicle health; address these proactively.` } });
                 }
                 let response: GenerateContentResponse = await activeChat.sendMessage({ message: userInput });
+                let functionCalled = false;
                 while (true) {
                     const functionCall = response.candidates?.[0]?.content?.parts[0]?.functionCall;
                     if (!functionCall) break;
-                    const args = functionCall.args as { searchQuery: string };
-                    addMessageToChat(`Searching for '${args.searchQuery}'...`, 'ai');
-                    const result = googleSearch(args);
+                    functionCalled = true;
+                    let result;
+                    if (functionCall.name === 'googleSearch') {
+                        const args = functionCall.args as { searchQuery: string };
+                        addMessageToChat(`Searching for '${args.searchQuery}'...`, 'ai');
+                        result = googleSearch(args);
+                    } else if (functionCall.name === 'findRoute') {
+                        const args = functionCall.args as { startLocation: string; endLocation: string; };
+                        addMessageToChat(`Okay, planning a route from ${args.startLocation} to ${args.endLocation}.`, 'ai');
+                        result = findRoute(args);
+                    } else {
+                        break;
+                    }
+
                     response = await activeChat.sendMessage({ contents: { parts: [{ functionResponse: { name: functionCall.name, response: result } }] } });
                 }
-                addMessageToChat(response.text, 'ai');
+                const responseText = response.text.trim();
+                if (responseText) {
+                    addMessageToChat(responseText, 'ai');
+                } else if (functionCalled) {
+                    addMessageToChat("Done!", 'ai');
+                }
             } catch (error) {
                 console.error("AI Chat Error:", error);
                 addMessageToChat("Sorry, I'm having trouble connecting right now.", 'ai');
@@ -712,6 +943,9 @@ document.addEventListener('DOMContentLoaded', () => {
         (document.getElementById('ai-chat-close') as HTMLButtonElement).addEventListener('click', () => {
              (document.getElementById('ai-chat-modal') as HTMLElement).classList.add('hidden');
              cancelSpeech();
+             if (recognition && isListening) {
+                recognition.stop();
+             }
         });
 
         const routeFinderPanel = document.getElementById('route-finder-panel')!;
@@ -770,124 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
         findRouteBtn.addEventListener('click', async () => {
             const fromName = fromInput.value.trim();
             const toName = toInput.value.trim();
-
-            if (!fromName || !toName) {
-                alert("Please enter both a start and destination.");
-                return;
-            }
-
-            const fromPoi = allPois.find(p => p.name.toLowerCase() === fromName.toLowerCase());
-            const toPoi = allPois.find(p => p.name.toLowerCase() === toName.toLowerCase());
-
-            if (!fromPoi || !toPoi) {
-                alert("Could not find one or both locations. Please use exact names from the list.");
-                return;
-            }
-            
-            try {
-                findRouteBtn.textContent = "Calculating...";
-                findRouteBtn.disabled = true;
-
-                const prompt = `
-                    You are a route planning assistant for Kathmandu, Nepal. Your task is to select a sequence of named road segments to form the best route between two points, based on user preferences.
-
-                    Available Roads Data (as GeoJSON features):
-                    ${JSON.stringify(allRoadsData.features)}
-
-                    Start Point: "${fromName}" (approximately at [${fromPoi.lng}, ${fromPoi.lat}])
-                    End Point: "${toName}" (approximately at [${toPoi.lng}, ${toPoi.lat}])
-
-                    User Routing Preferences:
-                    - Prefer Highways: ${routePreferences.preferHighways}
-                    - Avoid Tolls: ${routePreferences.avoidTolls}
-                    - Prefer Scenic Route: ${routePreferences.preferScenic}
-
-                    Please determine the optimal route. Your response must be a JSON object with a single key "route", which is an array of the exact 'name' properties of the road features to use, in the correct sequential order.
-                    Example response: {"route": ["Prithvi Highway", "Local Road", "Araniko Highway"]}
-                `;
-
-                const responseSchema = {
-                    type: Type.OBJECT,
-                    properties: {
-                        route: {
-                            type: Type.ARRAY,
-                            description: "An array of road names representing the route in sequential order.",
-                            items: {
-                                type: Type.STRING,
-                                description: "The name of a road segment."
-                            }
-                        }
-                    },
-                    required: ["route"]
-                };
-
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                    config: {
-                        responseMimeType: "application/json",
-                        responseSchema: responseSchema,
-                    }
-                });
-                
-                const result = JSON.parse(response.text);
-                const roadNames: string[] = result.route;
-
-                if (!roadNames || roadNames.length === 0) {
-                    alert("The AI could not determine a route. Please try different locations or preferences.");
-                    return;
-                }
-
-                const routeCoordinates: L.LatLng[] = [];
-                roadNames.forEach(name => {
-                    const roadFeature = allRoadsData.features.find((f: any) => f.properties.name === name);
-                    if (roadFeature) {
-                        const swappedCoords = roadFeature.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as L.LatLng);
-                        routeCoordinates.push(...swappedCoords);
-                    }
-                });
-                
-                if (routeCoordinates.length === 0) {
-                     alert("Could not find geometric data for the suggested route. Please check the data source.");
-                     return;
-                }
-
-                if (routeLine) map.removeLayer(routeLine);
-                if (routeStartMarker) map.removeLayer(routeStartMarker);
-                if (routeEndMarker) map.removeLayer(routeEndMarker);
-
-                routeLine = L.polyline(routeCoordinates, { 
-                    color: '#3498db', 
-                    weight: 8, 
-                    opacity: 0.9,
-                    dashArray: '10, 5'
-                }).addTo(map);
-
-                const startIcon = L.divIcon({
-                    html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim()};">location_on</span>`,
-                    className: 'route-marker-icon', iconSize: [36, 36], iconAnchor: [18, 36]
-                });
-                const endIcon = L.divIcon({
-                    html: `<span class="material-icons" style="font-size: 36px; color: ${getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim()};">flag</span>`,
-                    className: 'route-marker-icon', iconSize: [36, 36], iconAnchor: [5, 36]
-                });
-
-                routeStartMarker = L.marker([fromPoi.lat, fromPoi.lng], { icon: startIcon }).addTo(map).bindPopup(`<b>Start:</b> ${fromPoi.name}`);
-                routeEndMarker = L.marker([toPoi.lat, toPoi.lng], { icon: endIcon }).addTo(map).bindPopup(`<b>Destination:</b> ${toPoi.name}`);
-
-                const bounds = L.latLngBounds(routeCoordinates);
-                map.fitBounds(bounds.pad(0.2));
-
-                shareRouteBtn.classList.remove('hidden');
-                routeFinderPanel.classList.add('hidden');
-
-            } catch (error) {
-                console.error("Error finding AI route:", error);
-                alert("An error occurred while finding the route. Please try again.");
-            } finally {
-                findRouteBtn.textContent = t('find_route_btn');
-                findRouteBtn.disabled = false;
-            }
+            await calculateAndDrawRoute(fromName, toName);
         });
 
         clearRouteBtn.addEventListener('click', () => {
