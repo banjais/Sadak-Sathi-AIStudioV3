@@ -132,18 +132,24 @@
         </div>
 
         <div id="map-overlays-bottom-right">
-             <div id="layers-panel">
-                <div class="layer-toggle">
-                    <input type="checkbox" id="toggle-roads" checked>
-                    <label for="toggle-roads" data-lang-key="roads">Roads</label>
-                </div>
-                <div class="layer-toggle">
-                    <input type="checkbox" id="toggle-pois" checked>
-                    <label for="toggle-pois" data-lang-key="pois">Points of Interest</label>
-                </div>
-                <div class="layer-toggle">
-                    <input type="checkbox" id="toggle-incidents" checked>
-                    <label for="toggle-incidents" data-lang-key="incidents">Incidents</label>
+            <!-- Leaflet's zoom control is programmatically added here -->
+             <div id="data-layers-selector">
+                <button id="data-layers-btn" class="icon-button cockpit-item" data-lang-key-aria-label="layers" aria-label="Layers">
+                    <span class="material-icons">checklist</span>
+                </button>
+                <div id="data-layers-options" class="hidden">
+                     <div class="layer-toggle">
+                        <input type="checkbox" id="toggle-roads" checked>
+                        <label for="toggle-roads" data-lang-key="roads">Roads</label>
+                    </div>
+                    <div class="layer-toggle">
+                        <input type="checkbox" id="toggle-pois" checked>
+                        <label for="toggle-pois" data-lang-key="pois">Points of Interest</label>
+                    </div>
+                    <div class="layer-toggle">
+                        <input type="checkbox" id="toggle-incidents" checked>
+                        <label for="toggle-incidents" data-lang-key="incidents">Incidents</label>
+                    </div>
                 </div>
             </div>
         </div>

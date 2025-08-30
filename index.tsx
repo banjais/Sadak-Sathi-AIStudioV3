@@ -734,9 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setupCockpitWidgets();
         simulateWeather();
         simulateUserLocation();
-        // Temporarily pause alerts as per user request
-        // simulateDriverEmotion();
-        // simulateVehicleOBD();
+        // Re-enabling alerts
+        simulateDriverEmotion();
+        simulateVehicleOBD();
 
         const savedLang = localStorage.getItem('appLanguage') || 'en';
         (document.getElementById('language-select') as HTMLSelectElement).value = savedLang;
@@ -1115,15 +1115,13 @@ document.addEventListener('DOMContentLoaded', () => {
             iconEl.textContent = s.i;
             textEl.textContent = s.s;
             textEl.className = `status-text ${s.s.toLowerCase()}`;
-            // Temporarily disabled as per user request.
-            // if(s.a && !alertSent) { triggerAIAlert(s.a); alertSent = true; }
+            if(s.a && !alertSent) { triggerAIAlert(s.a); alertSent = true; }
             const prev = i;
             i = (i + 1) % states.length;
             if (prev !== i) alertSent = false;
             setTimeout(cycle, s.d);
         };
-        // Temporarily disabled as per user request.
-        // cycle();
+        cycle();
     };
 
     const simulateVehicleOBD = () => {
@@ -1134,9 +1132,8 @@ document.addEventListener('DOMContentLoaded', () => {
             f = Math.max(0, f - Math.random()*0.5); t = Math.max(70, Math.min(120, t + (Math.random()-0.5)*2)); p = Math.max(20, p-Math.random()*0.1);
             fV.textContent = `${Math.round(f)}%`; fB.style.width = `${f}%`; tV.textContent = `${Math.round(t)}°C`; tB.style.width = `${((t - 70) / 50) * 100}%`; pV.textContent = `${Math.round(p)} PSI`; pB.style.width = `${((p-20)/15)*100}%`;
             fB.className = `progress-bar ${f > 20 ? 'bar-good' : f > 10 ? 'bar-warn' : 'bar-danger'}`; tB.className = `progress-bar ${t < 105 ? 'bar-good' : t < 115 ? 'bar-warn' : 'bar-danger'}`; pB.className = `progress-bar ${p > 28 ? 'bar-good' : p > 25 ? 'bar-warn' : 'bar-danger'}`;
-            // Temporarily disabled as per user request.
-            // if (f < 15 && !fA) { triggerAIAlert('fuel_low_alert'); fA = true; } else if (f > 20) fA = false;
-            // if (p < 26 && !pA) { triggerAIAlert('pressure_low_alert'); pA = true; } else if (p > 28) pA = false;
+            if (f < 15 && !fA) { triggerAIAlert('fuel_low_alert'); fA = true; } else if (f > 20) fA = false;
+            if (p < 26 && !pA) { triggerAIAlert('pressure_low_alert'); pA = true; } else if (p > 28) pA = false;
         }, 3000);
     };
 
@@ -1413,6 +1410,19 @@ document.addEventListener('DOMContentLoaded', () => {
          document.addEventListener('click', (e) => {
             if (!mapStyleBtn.contains(e.target as Node) && !mapStyleOptions.contains(e.target as Node)) {
                 mapStyleOptions.classList.add('hidden');
+            }
+        });
+        
+        // Data Layer Selector Listeners
+        const dataLayersBtn = document.getElementById('data-layers-btn')!;
+        const dataLayersOptions = document.getElementById('data-layers-options')!;
+        dataLayersBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dataLayersOptions.classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+            if (!dataLayersBtn.contains(e.target as Node) && !dataLayersOptions.contains(e.target as Node)) {
+                dataLayersOptions.classList.add('hidden');
             }
         });
     };
