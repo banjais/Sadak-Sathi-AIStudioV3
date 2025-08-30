@@ -211,9 +211,18 @@
                     <span class="material-icons">sentiment_satisfied</span>
                     <span data-lang-key="driver_status_title">Driver Status</span>
                 </div>
-                <div id="driver-status">
-                    <span class="material-icons" id="driver-status-icon">sentiment_very_satisfied</span>
-                    <h3 id="driver-status-text">Calm</h3>
+                <div id="driver-monitor">
+                    <div id="camera-feed-container">
+                        <video id="camera-feed" autoplay playsinline muted></video>
+                        <div id="camera-placeholder" class="hidden">
+                            <span class="material-icons">no_photography</span>
+                        </div>
+                        <div class="scanner-overlay"></div>
+                    </div>
+                    <div id="driver-status">
+                        <span class="material-icons" id="driver-status-icon">sentiment_very_satisfied</span>
+                        <h3 id="driver-status-text">Calm</h3>
+                    </div>
                 </div>
             </div>
             <div id="vehicle-health-widget" class="dashboard-widget">

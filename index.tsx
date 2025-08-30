@@ -116,6 +116,7 @@ let isListening = false;
 let baseLayers: { [key: string]: L.TileLayer } = {};
 let currentBaseLayer: L.TileLayer | null = null;
 let lastLightBaseLayer = 'streets'; // To remember the last used light theme map
+let cameraStream: MediaStream | null = null;
 
 
 // =================================================================================
@@ -744,6 +745,36 @@ function getIconForCategory(category: string): L.DivIcon {
 // =================================================================================
 // AI & Simulation Functions
 // =================================================================================
+async function toggleCameraFeed(enable: boolean) {
+    const videoElement = document.getElementById('camera-feed') as HTMLVideoElement;
+    const placeholder = document.getElementById('camera-placeholder') as HTMLElement;
+
+    if (enable) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.warn('Camera API not available.');
+            videoElement.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            return;
+        }
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = cameraStream;
+            videoElement.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            videoElement.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    } else {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+            videoElement.srcObject = null;
+        }
+    }
+}
+
 function simulateDriverEmotion() {
     const statuses = [
         { status: 'calm', icon: 'sentiment_very_satisfied', colorClass: 'calm', alert: null },
@@ -1212,7 +1243,10 @@ function setupEventListeners() {
     });
 
     // Dashboard
-    dashboardBtn.addEventListener('click', () => driverDashboard.classList.toggle('open'));
+    dashboardBtn.addEventListener('click', () => {
+        const isOpen = driverDashboard.classList.toggle('open');
+        toggleCameraFeed(isOpen);
+    });
 
     // Route Finder
     routeFinderTrigger.addEventListener('click', () => routeFinderPanel.classList.remove('hidden'));
