@@ -205,47 +205,25 @@
                 </div>
             </div>
         </section>
-        
-        <!-- Driver Dashboard -->
-        <aside id="driver-dashboard">
-            <div id="driver-status-widget" class="dashboard-widget">
-                <div class="widget-header">
-                    <span class="material-icons">sentiment_satisfied</span>
-                    <span data-lang-key="driver_status_title">Driver Status</span>
-                </div>
-                <div id="driver-monitor">
-                    <div id="camera-feed-container">
-                        <video id="camera-feed" autoplay playsinline muted></video>
-                        <div id="camera-placeholder" class="hidden">
-                            <span class="material-icons">no_photography</span>
-                        </div>
-                        <div class="scanner-overlay"></div>
-                    </div>
-                    <div id="driver-status">
-                        <span class="material-icons" id="driver-status-icon">sentiment_very_satisfied</span>
-                        <h3 id="driver-status-text">Calm</h3>
-                    </div>
+
+        <!-- Live Cam Panel (Floating) -->
+        <aside id="live-cam-panel" class="hidden">
+            <div id="live-cam-header">
+                <span class="material-icons cam-status-icon">videocam</span>
+                <span class="cam-title">Live Cam</span>
+                <div class="cam-controls">
+                    <button id="flip-cam-btn" class="icon-button" aria-label="Flip Camera">
+                        <span class="material-icons">flip_camera_android</span>
+                    </button>
+                    <button id="close-cam-btn" class="icon-button" aria-label="Close Camera">
+                        <span class="material-icons">close</span>
+                    </button>
                 </div>
             </div>
-            <div id="vehicle-health-widget" class="dashboard-widget">
-                <div class="widget-header">
-                     <span class="material-icons">directions_car</span>
-                    <span data-lang-key="vehicle_health_title">Vehicle Health</span>
-                </div>
-                <div class="vehicle-vitals">
-                    <div class="vehicle-vital">
-                        <div class="vital-label"><span data-lang-key="fuel_level">Fuel Level</span><span id="fuel-value">85%</span></div>
-                        <div class="progress-bar-container"><div id="fuel-bar" class="progress-bar bar-good"></div></div>
-                    </div>
-                    <div class="vehicle-vital">
-                        <div class="vital-label"><span data-lang-key="engine_temp">Engine Temp</span><span id="temp-value">90°C</span></div>
-                        <div class="progress-bar-container"><div id="temp-bar" class="progress-bar bar-good"></div></div>
-                    </div>
-                    <div class="vehicle-vital">
-                        <div class="vital-label"><span data-lang-key="tire_pressure">Tire Pressure</span><span id="pressure-value">32 PSI</span></div>
-                        <div class="progress-bar-container"><div id="pressure-bar" class="progress-bar bar-good"></div></div>
-                    </div>
-                </div>
+            <video id="live-cam-video" autoplay playsinline muted></video>
+            <div id="live-cam-placeholder">
+                <span class="material-icons">videocam_off</span>
+                <p>Camera not available</p>
             </div>
         </aside>
 
@@ -367,9 +345,9 @@
                 <span class="material-icons">settings</span>
                 <span class="label" data-lang-key="menu_settings">Settings</span>
             </button>
-            <button id="dashboard-btn" class="menu-item" data-lang-key-aria-label="menu_dashboard" aria-label="Dashboard">
-                <span class="material-icons">speed</span>
-                 <span class="label" data-lang-key="menu_dashboard">Dashboard</span>
+            <button id="live-cam-btn" class="menu-item" aria-label="Live Cam">
+                <span class="material-icons">videocam</span>
+                 <span class="label">Live Cam</span>
             </button>
 
             <button id="route-finder-trigger" class="menu-action-button" data-lang-key-aria-label="open_route_finder" aria-label="Open Route Finder">

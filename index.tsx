@@ -117,6 +117,7 @@ let baseLayers: { [key: string]: L.TileLayer } = {};
 let currentBaseLayer: L.TileLayer | null = null;
 let lastLightBaseLayer = 'streets'; // To remember the last used light theme map
 let cameraStream: MediaStream | null = null;
+let isFrontCamera = false; // For the new Live Cam feature
 
 
 // =================================================================================
@@ -744,11 +745,13 @@ function getIconForCategory(category: string): L.DivIcon {
 // =================================================================================
 // AI & Simulation Functions
 // =================================================================================
-async function toggleCameraFeed(enable: boolean) {
-    const videoElement = document.getElementById('camera-feed') as HTMLVideoElement;
-    const placeholder = document.getElementById('camera-placeholder') as HTMLElement;
+async function startLiveCam(enable: boolean) {
+    const videoElement = document.getElementById('live-cam-video') as HTMLVideoElement;
+    const placeholder = document.getElementById('live-cam-placeholder') as HTMLElement;
+    const panel = document.getElementById('live-cam-panel') as HTMLElement;
 
     if (enable) {
+        panel.classList.remove('hidden');
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             console.warn('Camera API not available.');
             videoElement.classList.add('hidden');
@@ -756,7 +759,17 @@ async function toggleCameraFeed(enable: boolean) {
             return;
         }
         try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Stop any existing stream before starting a new one
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    facingMode: isFrontCamera ? 'user' : 'environment'
+                }
+            };
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
             videoElement.srcObject = cameraStream;
             videoElement.classList.remove('hidden');
             placeholder.classList.add('hidden');
@@ -771,56 +784,7 @@ async function toggleCameraFeed(enable: boolean) {
             cameraStream = null;
             videoElement.srcObject = null;
         }
-    }
-}
-
-function simulateDriverEmotion() {
-    const statuses = [
-        { status: 'calm', icon: 'sentiment_very_satisfied', colorClass: 'calm', alert: null },
-        { status: 'tired', icon: 'sentiment_dissatisfied', colorClass: 'tired', alert: 'driver_tired_alert' },
-        { status: 'stressed', icon: 'sentiment_very_dissatisfied', colorClass: 'stressed', alert: 'driver_stressed_alert' }
-    ];
-    const currentStatus = statuses[Math.floor(Math.random() * statuses.length)];
-
-    const statusIcon = document.getElementById('driver-status-icon')!;
-    const statusText = document.getElementById('driver-status-text')!;
-
-    statusIcon.textContent = currentStatus.icon;
-    statusText.textContent = currentStatus.status.charAt(0).toUpperCase() + currentStatus.status.slice(1);
-    statusText.className = currentStatus.colorClass;
-
-    if (currentStatus.alert) {
-       // triggerAIAlert(currentStatus.alert);
-    }
-}
-
-function simulateVehicleOBD() {
-    // Fuel
-    const fuelValue = Math.floor(Math.random() * 100);
-    const fuelBar = document.getElementById('fuel-bar')!;
-    (document.getElementById('fuel-value') as HTMLElement).innerText = `${fuelValue}%`;
-    fuelBar.style.width = `${fuelValue}%`;
-    fuelBar.className = 'progress-bar';
-    if (fuelValue < 20) {
-        fuelBar.classList.add('bar-danger');
-       // triggerAIAlert('fuel_low_alert');
-    } else if (fuelValue < 50) {
-        fuelBar.classList.add('bar-warn');
-    } else {
-        fuelBar.classList.add('bar-good');
-    }
-
-    // Tire Pressure
-    const pressureValue = 28 + Math.floor(Math.random() * 8); // 28-35 PSI
-    const pressureBar = document.getElementById('pressure-bar')!;
-    (document.getElementById('pressure-value') as HTMLElement).innerText = `${pressureValue} PSI`;
-    pressureBar.style.width = `${((pressureValue - 25) / 10) * 100}%`;
-    pressureBar.className = 'progress-bar';
-    if (pressureValue < 30) {
-        pressureBar.classList.add('bar-danger');
-      //  triggerAIAlert('pressure_low_alert');
-    } else {
-        pressureBar.classList.add('bar-good');
+        panel.classList.add('hidden');
     }
 }
 
@@ -1159,8 +1123,6 @@ function setupEventListeners() {
     const closeChatBtn = document.getElementById('close-chat-btn')!;
     const chatForm = document.getElementById('chat-form')!;
     const chatInput = document.getElementById('chat-input') as HTMLInputElement;
-    const dashboardBtn = document.getElementById('dashboard-btn')!;
-    const driverDashboard = document.getElementById('driver-dashboard')!;
     const routeFinderTrigger = document.getElementById('route-finder-trigger')!;
     const routeFinderPanel = document.getElementById('route-finder-panel')!;
     const routeFinderClose = document.getElementById('route-finder-close')!;
@@ -1241,11 +1203,50 @@ function setupEventListeners() {
         }
     });
 
-    // Dashboard
-    dashboardBtn.addEventListener('click', () => {
-        const isOpen = driverDashboard.classList.toggle('open');
-        toggleCameraFeed(isOpen);
+    // Live Cam Feature
+    const liveCamBtn = document.getElementById('live-cam-btn')!;
+    liveCamBtn.addEventListener('click', () => {
+        if (currentAppMode === 'driving') {
+            alert('Live Cam is disabled in Driving mode for your safety.');
+            return;
+        }
+        const camPanel = document.getElementById('live-cam-panel')!;
+        const isOpening = camPanel.classList.contains('hidden');
+        startLiveCam(isOpening);
     });
+
+    document.getElementById('close-cam-btn')!.addEventListener('click', () => startLiveCam(false));
+
+    document.getElementById('flip-cam-btn')!.addEventListener('click', () => {
+        isFrontCamera = !isFrontCamera;
+        startLiveCam(true); // Restart the stream with the new camera
+    });
+    
+    // Make Live Cam panel draggable
+    const liveCamPanel = document.getElementById('live-cam-panel')!;
+    const liveCamHeader = document.getElementById('live-cam-header')!;
+    let isDragging = false;
+    let offsetX: number, offsetY: number;
+
+    liveCamHeader.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - liveCamPanel.offsetLeft;
+        offsetY = e.clientY - liveCamPanel.offsetTop;
+        liveCamPanel.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            liveCamPanel.style.left = `${e.clientX - offsetX}px`;
+            liveCamPanel.style.top = `${e.clientY - offsetY}px`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        liveCamPanel.style.cursor = 'default';
+    });
+
 
     // Route Finder
     routeFinderTrigger.addEventListener('click', () => routeFinderPanel.classList.remove('hidden'));
@@ -1393,7 +1394,14 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     changeLanguage(savedLang); // This also calls updateUIText and initAI
     
-    // Start simulations
-    setInterval(simulateDriverEmotion, 15000);
-    setInterval(simulateVehicleOBD, 10000);
+    // Start simulations for proactive alerts (decoupled from UI)
+    setInterval(() => {
+        // Simulate fuel level
+        if (Math.random() < 0.1) triggerAIAlert('fuel_low_alert');
+    }, 30000);
+
+    setInterval(() => {
+        // Simulate tire pressure
+        if (Math.random() < 0.05) triggerAIAlert('pressure_low_alert');
+    }, 60000);
 });

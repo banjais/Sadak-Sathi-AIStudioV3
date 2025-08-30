@@ -745,125 +745,66 @@ html, body {
     border: none;
 }
 
-/* Driver Dashboard */
-#driver-dashboard {
+/* Live Cam Panel */
+#live-cam-panel {
     position: absolute;
-    bottom: 80px;
+    top: 80px;
     left: 10px;
-    width: 300px;
-    background: var(--panel-bg-color);
+    width: 280px;
+    min-width: 200px;
+    min-height: 150px;
+    background-color: var(--panel-bg-color);
     border-radius: 12px;
-    z-index: 999;
+    z-index: 998;
     box-shadow: 0 4px 15px var(--shadow-color);
-    transform: translateX(-110%);
-    transition: transform 0.4s ease-in-out;
-}
-#driver-dashboard.open {
-    transform: translateX(0);
-}
-.dashboard-widget {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-.dashboard-widget:last-child {
-    border-bottom: none;
-}
-.widget-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
-#driver-monitor {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-}
-#camera-feed-container {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    position: relative;
     overflow: hidden;
-    background-color: var(--bg-color);
-    border: 3px solid var(--border-color);
-    box-shadow: 0 0 10px var(--shadow-color) inset;
+    resize: both;
+    border: 1px solid var(--border-color);
 }
-#camera-feed {
+#live-cam-header {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: var(--bg-color);
+    cursor: move;
+    user-select: none;
+    border-bottom: 1px solid var(--border-color);
+}
+.cam-title {
+    flex-grow: 1;
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-left: 8px;
+}
+.cam-status-icon {
+    color: var(--success-color);
+    animation: pulse 1.5s infinite;
+}
+.cam-controls {
+    display: flex;
+    align-items: center;
+}
+#live-cam-video {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transform: scaleX(-1); /* Mirror effect for selfie cam */
+    background-color: #000;
 }
-#camera-placeholder {
-    width: 100%;
-    height: 100%;
+#live-cam-placeholder {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
     background-color: var(--bg-color);
-}
-#camera-placeholder .material-icons {
-    font-size: 4rem;
     color: var(--text-color-muted);
 }
-.scanner-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient( to bottom, rgba(52, 152, 219, 0) 0%, rgba(52, 152, 219, 0.4) 49%, rgba(52, 152, 219, 0.5) 50%, rgba(52, 152, 219, 0.4) 51%, rgba(52, 152, 219, 0) 100% );
-    animation: scan 3s infinite linear;
-    opacity: 0;
-    transition: opacity 0.5s;
+#live-cam-placeholder .material-icons {
+    font-size: 3rem;
 }
-#driver-dashboard.open .scanner-overlay {
-    opacity: 1;
-}
-@keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-}
-#driver-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-#driver-status-icon {
-    font-size: 2rem;
-}
-#driver-status-text.calm { color: var(--success-color); }
-#driver-status-text.tired { color: var(--warning-color); }
-#driver-status-text.stressed { color: var(--danger-color); }
-
-.vehicle-vital {
-    margin-bottom: 0.75rem;
-}
-.vital-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
-}
-.progress-bar-container {
-    width: 100%;
-    background-color: var(--bg-color);
-    border-radius: 4px;
-    height: 8px;
-    overflow: hidden;
-}
-.progress-bar {
-    height: 100%;
-    width: 75%;
-    border-radius: 4px;
-    transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
-}
-.bar-good { background-color: var(--success-color); }
-.bar-warn { background-color: var(--warning-color); }
-.bar-danger { background-color: var(--danger-color); }
 
 
 /* Generic Modal Styles */
@@ -912,9 +853,8 @@ html, body {
 }
 
 /* Conditional UI visibility based on App Mode */
-#app-container[data-mode="driving"] #dashboard-btn { display: flex; }
-#app-container[data-mode="riding"] #sos-btn { display: flex; }
-#app-container[data-mode="exploring"] #sos-btn { display: flex; }
+#app-container[data-mode="riding"] #sos-btn,
+#app-container[data-mode="exploring"] #sos-btn,
 #app-container[data-mode="connect"] #sos-btn, 
 #app-container[data-mode="connect"] #share-trip-btn { display: flex; }
 
