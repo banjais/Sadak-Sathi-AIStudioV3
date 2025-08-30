@@ -27,7 +27,7 @@
             <div class="header-left">
                 <div class="app-title">
                     <h1>Sadak Sathi</h1>
-                    <p class="app-subtitle">Your Smart Road Companion</p>
+                    <p class="app-subtitle" data-lang-key="app_subtitle">Your Smart Road Companion</p>
                 </div>
             </div>
             <div class="header-right">
@@ -41,12 +41,24 @@
                         <span id="location-coords">27.70, 85.32</span>
                     </div>
                 </div>
-                <div id="gps-status-indicator" title="GPS Status: Searching..."></div>
-                <button id="profile-btn" class="icon-button" aria-label="Profile">
+                <div id="gps-status-indicator" data-lang-key-title="gps_searching" title="GPS Status: Searching..."></div>
+                <button id="profile-btn" class="icon-button" data-lang-key-aria-label="profile" aria-label="Profile">
                     <span class="material-icons">person</span>
                 </button>
             </div>
         </header>
+
+        <!-- Proactive Alert Banner -->
+        <div id="proactive-alert" class="hidden">
+            <span class="material-icons alert-icon">warning</span>
+            <p id="alert-message"></p>
+            <div class="alert-actions">
+                 <button id="alert-ask-ai-btn" class="alert-btn" data-lang-key="alert_ask_ai">Ask AI</button>
+                 <button id="alert-close-btn" class="icon-button" data-lang-key-aria-label="alert_dismiss" aria-label="Dismiss Alert">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+        </div>
 
         <!-- Settings Panel -->
         <aside id="settings-panel">
@@ -67,9 +79,9 @@
             </div>
             <hr>
             <div class="settings-section">
-                <h3>App Settings</h3>
+                <h3 data-lang-key="app_settings">App Settings</h3>
                  <div class="setting-item">
-                    <label for="language-select">Language</label>
+                    <label for="language-select" data-lang-key="language">Language</label>
                     <select id="language-select" aria-label="Select language">
                         <option value="en">English</option>
                         <option value="np">नेपाली</option>
@@ -85,8 +97,8 @@
                     </select>
                 </div>
                 <div class="setting-item">
-                    <span>Dark Mode</span>
-                    <button id="theme-toggle" class="icon-button" aria-label="Toggle dark mode">
+                    <span data-lang-key="dark_mode">Dark Mode</span>
+                    <button id="theme-toggle" class="icon-button" data-lang-key-aria-label="toggle_dark_mode" aria-label="Toggle dark mode">
                         <span class="material-icons">light_mode</span>
                     </button>
                 </div>
@@ -99,6 +111,17 @@
 
         <!-- Map Overlays -->
         <div id="map-overlays-top-right">
+             <div id="map-style-selector">
+                <button id="map-style-btn" class="icon-button cockpit-item" aria-label="Change map style">
+                    <span class="material-icons">layers</span>
+                </button>
+                <div id="map-style-options" class="hidden">
+                    <button class="style-option" data-style="streets">Streets</button>
+                    <button class="style-option" data-style="satellite">Satellite</button>
+                    <button class="style-option" data-style="terrain">Terrain</button>
+                    <button class="style-option" data-style="dark">Dark</button>
+                </div>
+            </div>
             <div class="cockpit-item" id="speed-widget">
                 <span class="value">0</span>
                 <span class="label">km/h</span>
@@ -126,7 +149,7 @@
         </div>
 
         <!-- Center Location Button -->
-        <button id="center-location-btn" class="icon-button" aria-label="Center on my location">
+        <button id="center-location-btn" class="icon-button" data-lang-key-aria-label="center_location" aria-label="Center on my location">
             <span class="material-icons">my_location</span>
         </button>
 
@@ -151,7 +174,7 @@
             <div id="driver-status-widget" class="dashboard-widget">
                 <div class="widget-header">
                     <span class="material-icons">sentiment_satisfied</span>
-                    <span>Driver Status</span>
+                    <span data-lang-key="driver_status_title">Driver Status</span>
                 </div>
                 <div id="driver-status">
                     <span class="material-icons" id="driver-status-icon">sentiment_very_satisfied</span>
@@ -161,19 +184,19 @@
             <div id="vehicle-health-widget" class="dashboard-widget">
                 <div class="widget-header">
                      <span class="material-icons">directions_car</span>
-                    <span>Vehicle Health</span>
+                    <span data-lang-key="vehicle_health_title">Vehicle Health</span>
                 </div>
                 <div class="vehicle-vitals">
                     <div class="vehicle-vital">
-                        <div class="vital-label"><span>Fuel Level</span><span id="fuel-value">85%</span></div>
+                        <div class="vital-label"><span data-lang-key="fuel_level">Fuel Level</span><span id="fuel-value">85%</span></div>
                         <div class="progress-bar-container"><div id="fuel-bar" class="progress-bar bar-good"></div></div>
                     </div>
                     <div class="vehicle-vital">
-                        <div class="vital-label"><span>Engine Temp</span><span id="temp-value">90°C</span></div>
+                        <div class="vital-label"><span data-lang-key="engine_temp">Engine Temp</span><span id="temp-value">90°C</span></div>
                         <div class="progress-bar-container"><div id="temp-bar" class="progress-bar bar-good"></div></div>
                     </div>
                     <div class="vehicle-vital">
-                        <div class="vital-label"><span>Tire Pressure</span><span id="pressure-value">32 PSI</span></div>
+                        <div class="vital-label"><span data-lang-key="tire_pressure">Tire Pressure</span><span id="pressure-value">32 PSI</span></div>
                         <div class="progress-bar-container"><div id="pressure-bar" class="progress-bar bar-good"></div></div>
                     </div>
                 </div>
@@ -185,18 +208,18 @@
             <div class="panel-content">
                 <div class="panel-header">
                     <h2 data-lang-key="route_finder">Route Finder</h2>
-                    <button id="route-finder-close" class="icon-button" aria-label="Close">
+                    <button id="route-finder-close" class="icon-button" data-lang-key-aria-label="close" aria-label="Close">
                         <span class="material-icons">close</span>
                     </button>
                 </div>
                 <div class="route-inputs">
                     <div class="input-group">
-                        <label for="from-input">From</label>
-                        <input type="text" id="from-input" placeholder="Start location" value="Maitighar Mandala">
+                        <label for="from-input" data-lang-key="from">From</label>
+                        <input type="text" id="from-input" data-lang-key-placeholder="from_placeholder" placeholder="Start location" value="Maitighar Mandala">
                     </div>
                     <div class="input-group">
-                        <label for="to-input">To</label>
-                        <input type="text" id="to-input" placeholder="Destination" value="Thapathali Bridge">
+                        <label for="to-input" data-lang-key="to">To</label>
+                        <input type="text" id="to-input" data-lang-key-placeholder="to_placeholder" placeholder="Destination" value="Thapathali Bridge">
                     </div>
                 </div>
                 <div id="route-details"></div>
@@ -216,7 +239,7 @@
             <div class="chat-panel">
                 <div class="panel-header" id="ai-chat-header">
                     <h2 data-lang-key="ai_chat_title">AI Assistant</h2>
-                    <button id="ai-chat-close" class="icon-button" aria-label="Close Chat">
+                    <button id="ai-chat-close" class="icon-button" data-lang-key-aria-label="close_chat" aria-label="Close Chat">
                         <span class="material-icons">close</span>
                     </button>
                 </div>
@@ -229,10 +252,10 @@
                     </div>
                     <form id="chat-form">
                         <input type="text" id="chat-input" data-lang-key-placeholder="ai_chat_placeholder" placeholder="Type a message..." autocomplete="off">
-                        <button type="button" id="voice-command-btn" class="icon-button" aria-label="Use microphone">
+                        <button type="button" id="voice-command-btn" class="icon-button" data-lang-key-aria-label="use_microphone" aria-label="Use microphone">
                             <span class="material-icons">mic</span>
                         </button>
-                        <button type="submit" class="icon-button" aria-label="Send Message">
+                        <button type="submit" class="icon-button" data-lang-key-aria-label="send_message" aria-label="Send Message">
                             <span class="material-icons">send</span>
                         </button>
                     </form>
@@ -262,7 +285,7 @@
                         <span data-lang-key="mode_connect">Connect</span>
                     </button>
                 </div>
-                <button id="app-mode-modal-close" class="modal-close-btn icon-button" aria-label="Close">
+                <button id="app-mode-modal-close" class="modal-close-btn icon-button" data-lang-key-aria-label="close" aria-label="Close">
                     <span class="material-icons">close</span>
                 </button>
             </div>
@@ -273,7 +296,7 @@
              <div class="modal-content">
                 <h3 data-lang-key="emergency_sos">Emergency SOS</h3>
                 <p data-lang-key="sos_message">Sending your location to emergency contacts...</p>
-                 <button id="sos-modal-close" class="modal-close-btn icon-button" aria-label="Close">
+                 <button id="sos-modal-close" class="modal-close-btn icon-button" data-lang-key-aria-label="close" aria-label="Close">
                     <span class="material-icons">close</span>
                 </button>
             </div>
@@ -297,7 +320,7 @@
                         <span data-lang-key="stop_sharing">Stop Sharing</span>
                     </button>
                 </div>
-                <button id="share-trip-modal-close" class="modal-close-btn icon-button" aria-label="Close">
+                <button id="share-trip-modal-close" class="modal-close-btn icon-button" data-lang-key-aria-label="close" aria-label="Close">
                     <span class="material-icons">close</span>
                 </button>
             </div>
@@ -313,30 +336,30 @@
             </button>
             
             <!-- Dynamic Mode Button -->
-            <button id="app-mode-btn" class="menu-item" aria-label="Change App Mode">
+            <button id="app-mode-btn" class="menu-item" data-lang-key-aria-label="change_mode" aria-label="Change App Mode">
                 <span class="material-icons">directions_car</span>
                 <span class="label" data-lang-key="mode_driving">Driving</span>
             </button>
 
-            <button id="route-finder-trigger" class="menu-action-button" aria-label="Open Route Finder">
+            <button id="route-finder-trigger" class="menu-action-button" data-lang-key-aria-label="open_route_finder" aria-label="Open Route Finder">
                 <span class="material-icons">directions</span>
             </button>
             
             <!-- Contextual Action Buttons -->
-            <button id="dashboard-btn" class="menu-item" aria-label="Open Driver Dashboard">
+            <button id="dashboard-btn" class="menu-item" data-lang-key-aria-label="open_dashboard" aria-label="Open Driver Dashboard">
                 <span class="material-icons">dashboard</span>
                 <span class="label" data-lang-key="menu_dashboard">Dashboard</span>
             </button>
-            <button id="sos-btn" class="menu-item hidden" aria-label="SOS">
+            <button id="sos-btn" class="menu-item hidden" data-lang-key-aria-label="menu_sos" aria-label="SOS">
                 <span class="material-icons">sos</span>
                 <span class="label" data-lang-key="menu_sos">SOS</span>
             </button>
-            <button id="share-trip-btn" class="menu-item hidden" aria-label="Share Trip">
+            <button id="share-trip-btn" class="menu-item hidden" data-lang-key-aria-label="menu_share_trip" aria-label="Share Trip">
                 <span class="material-icons">share_location</span>
                 <span class="label" data-lang-key="menu_share_trip">Share Trip</span>
             </button>
 
-            <button id="ai-assistant" class="menu-action-button" aria-label="AI Assistant">
+            <button id="ai-assistant" class="menu-action-button" data-lang-key-aria-label="ai_assistant_btn" aria-label="AI Assistant">
                 <span class="material-icons">mic</span>
             </button>
         </nav>

@@ -120,6 +120,63 @@ html, body {
     color: var(--text-color-muted);
 }
 
+/* Proactive Alert Banner */
+#proactive-alert {
+    position: absolute;
+    top: 70px; /* Below header */
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    width: 90%;
+    max-width: 600px;
+    z-index: 1001; /* Above map, below modals */
+    background-color: var(--warning-color);
+    color: white;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    opacity: 0;
+}
+#proactive-alert:not(.hidden) {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+#proactive-alert .alert-icon {
+    font-size: 1.8rem;
+}
+#proactive-alert p {
+    flex-grow: 1;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+.alert-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.alert-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.alert-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+#alert-close-btn {
+    color: white;
+}
+#alert-close-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
 /* User Info Widgets in Header */
 #user-info-widget {
     display: flex;
@@ -442,14 +499,58 @@ html, body {
 .cockpit-item {
     background: var(--header-bg-color);
     backdrop-filter: blur(5px);
-    padding: 8px 12px;
+    padding: 8px;
     border-radius: 8px;
     box-shadow: 0 2px 5px var(--shadow-color);
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#speed-widget {
+    flex-direction: column;
+    padding: 8px 12px;
 }
 #speed-widget .value { font-size: 1.5rem; font-weight: 500; }
 #speed-widget .label { font-size: 0.75rem; color: var(--text-color-muted); }
 #compass-widget .compass-rose { font-size: 1.5rem; font-weight: bold; }
+
+/* Map Style Selector */
+#map-style-selector {
+    position: relative;
+}
+#map-style-selector #map-style-btn {
+    width: 44px;
+    height: 44px;
+}
+#map-style-options {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background: var(--header-bg-color);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.style-option {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.style-option:hover, .style-option.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
 
 #map-overlays-bottom-right {
     position: absolute;
